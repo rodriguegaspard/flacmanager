@@ -12,14 +12,20 @@ def printMetadata(audio_files):
         title = file.tags["title"][0] if "title" in file.tags else "N/A"
         print("{:<40} {:<20} {:<30} {:<10} {:<30}".format(album, genre, artist, tracknumber, title))
 
+def checkMetadata(audio_files):
+    for file in audio_files:
+        print(len(file.pictures))
 
 # Creating the parser
 parser = argparse.ArgumentParser(description='Manages metadata for multiple audio formats.')
 parser.add_argument("input", metavar="files", nargs="+", help='audio file(s)')
 parser.add_argument("-l", "--list", action="store_true", default=False, help='Prints the metadata of the audio files.')
+parser.add_argument("-c", "--check", action="store_true", default=False, help='Checks if audio files have missing metadata tags.')
 args = parser.parse_args()
 
 
 if args.list:
     printMetadata(audio_files)
 
+if args.check:
+    checkMetadata(audio_files)
