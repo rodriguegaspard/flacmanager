@@ -23,6 +23,8 @@ parser.add_argument("-l", "--list", action="store_true", default=False, help='Pr
 parser.add_argument("-c", "--check", action="store_true", default=False, help='Checks if audio files have missing metadata tags.')
 args = parser.parse_args()
 
+# Access the input arguments, and removes any unwanted files
+audio_files = list(filter(lambda file: file is not None, map(lambda file: mutagen.File(file), args.input)))
 
 if args.list:
     printMetadata(audio_files)
