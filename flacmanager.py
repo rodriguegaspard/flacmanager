@@ -42,7 +42,7 @@ def printMetadataIssues(audio_files):
         if issues>0:
             badFiles+=1
             print("{} issue(s) found for \'{}\' ({}).".format(issues, os.path.basename(file[1]), issuesList))
-    print("{} file(s) with metadata issues found.".format(badFiles))
+    print("{}/{} file(s) with metadata issues found.".format(badFiles, len(audio_files)))
 
 def printMetadata(audio_files):
     print ("{:<40} {:<20} {:<30} {:<10} {:<30}".format('Album', 'Genre', 'Artist', '#', 'Title'))
