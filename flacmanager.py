@@ -2,6 +2,14 @@ import os
 import mutagen
 import argparse
 
+def renameAudioFiles(audio_files):
+    for file in audio_files:
+        if "tracknumber" in file[0].tags and "title" in file[0].tags:
+            filename = os.path.dirname(file[1]) + "/" + file[0].tags["tracknumber"][0] + " - " + file[0].tags["title"][0] + os.path.splitext(file[1])[1] 
+            os.rename(file[1], filename)
+        else:
+            print("Could not rename {} : missing tags.".format(os.path.basename(file[1])))
+
 def printMetadataIssues(audio_files):
     tags = ["album" , "genre", "artist", "tracknumber", "title"]
     badFiles = 0
@@ -35,6 +43,7 @@ parser = argparse.ArgumentParser(description='Manages metadata for multiple audi
 parser.add_argument("input", metavar="files", nargs="+", help='audio file(s)')
 parser.add_argument("-l", "--list", action="store_true", default=False, help='Prints the metadata of the audio files.')
 parser.add_argument("-c", "--check", action="store_true", default=False, help='Prints metadata issues (missing tags or album covers).')
+parser.add_argument("-r", "--rename", action="store_true", default=False, help='Renames files using tracknumber and title metadata.')
 args = parser.parse_args()
 
 # Access the input arguments, and removes any unwanted files
@@ -45,3 +54,6 @@ if args.list:
 
 if args.check:
     printMetadataIssues(audio_files)
+
+if args.rename:
+    renameAudioFiles(audio_files)
