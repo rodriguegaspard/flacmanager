@@ -17,7 +17,7 @@ def printMetadataIssues(audio_files):
             issuesList+="album_cover"
         if issues>0:
             badFiles+=1
-            print("{} issue(s) found for \'{}\' ({}).".format(issues, file[1], issuesList))
+            print("{} issue(s) found for \'{}\' ({}).".format(issues, os.path.basename(file[1]), issuesList))
     print("{} file(s) with metadata issues found.".format(badFiles))
 
 def printMetadata(audio_files):
@@ -38,7 +38,7 @@ parser.add_argument("-c", "--check", action="store_true", default=False, help='P
 args = parser.parse_args()
 
 # Access the input arguments, and removes any unwanted files
-audio_files = list(filter(lambda file: file is not None, map(lambda file: (mutagen.File(file), os.path.basename(file)), args.input)))
+audio_files = list(filter(lambda file: file is not None, map(lambda file: (mutagen.File(file), file), args.input)))
 
 if args.list:
     printMetadata(audio_files)
