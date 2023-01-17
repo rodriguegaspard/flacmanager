@@ -2,6 +2,22 @@ import os
 import mutagen
 import argparse
 
+def sortAudioFiles(audio_files, path=""):
+    for file in audio_files:
+        if "artist" in file[0].tags:
+            artist = file[0].tags["artist"][0]
+            if"album" in file[0].tags:
+                album = file[0].tags["album"][0]
+            else:
+                album = "Unknown Album"
+        else:
+            artist = "Unknown Artist"
+        albumPath = os.path.normpath(os.path.abspath(path) + "/" + artist + "/" + album)
+        if not os.path.isdir(albumPath):
+            os.makedirs(albumPath)
+        os.rename(file[1], os.path.normpath(albumPath + "/" + os.path.basename(file[1])))
+        print(file[1])
+
 def renameAudioFiles(audio_files):
     for file in audio_files:
         if "tracknumber" in file[0].tags and "title" in file[0].tags:
@@ -44,6 +60,7 @@ parser.add_argument("input", metavar="files", nargs="+", help='audio file(s)')
 parser.add_argument("-l", "--list", action="store_true", default=False, help='Prints the metadata of the audio files.')
 parser.add_argument("-c", "--check", action="store_true", default=False, help='Prints metadata issues (missing tags or album covers).')
 parser.add_argument("-r", "--rename", action="store_true", default=False, help='Renames files using tracknumber and title metadata.')
+parser.add_argument("-s", "--sort", metavar="destination", nargs="?", help='Sorts audio files by artist and by album in folders at destination.')
 args = parser.parse_args()
 
 # Access the input arguments, and removes any unwanted files
@@ -57,3 +74,10 @@ if args.check:
 
 if args.rename:
     renameAudioFiles(audio_files)
+
+if args.sort:
+    # If no directory is found after the -s/--sort flag, default to current directory
+    if os.path.isdir(args.sort):
+        sortAudioFiles(audio_files, args.sort)
+    else:
+        sortAudioFiles(audio_files)
