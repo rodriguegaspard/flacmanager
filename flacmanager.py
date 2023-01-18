@@ -62,6 +62,7 @@ def addPicture(picture, audio_files):
         choice = input(picture + " will be the new cover art for " + str(len(audio_files)) + " files. Proceed? (Y/n) ")
         if choice == 'Y':
             for file in audio_files:
+                file[0].clear_pictures()
                 file[0].add_picture(coverArt)
                 file[0].save()
 
