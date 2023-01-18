@@ -2,6 +2,16 @@ import os
 import mutagen
 import argparse
 
+def modifyMetadata(tag, value, audio_files):
+    if tag not in ["album", "genre", "artist", "tracknumber", "title"]:
+        print("ERROR: {} is not a valid tag. Please provide a valid metadata tag. See -l/--list for a list of all relevant metadata tags.".format(tag))
+    else:
+        choice = input(value + " will be the new value for the " + tag.upper() + " tag for " + str(len(audio_files)) + " files. Proceed? (Y/n) ")
+        if choice == 'Y':
+            for file in audio_files:
+                file[0].tags[tag.upper()] = value
+                file[0].save()
+
 def sortAudioFiles(audio_files, path=""):
     new_audio_files = []
     for file in audio_files:
@@ -66,8 +76,9 @@ parser.add_argument("input", metavar="files", nargs="+", help='audio file(s)')
 parser.add_argument("-l", "--list", action="store_true", default=False, help='Prints the metadata of the audio files.')
 parser.add_argument("-c", "--check", action="store_true", default=False, help='Prints metadata issues (missing tags or album covers).')
 parser.add_argument("-r", "--rename", action="store_true", default=False, help='Renames files using tracknumber and title metadata.')
-parser.add_argument("-s", "--sort", metavar="destination", nargs="?", help='Sorts audio files by artist and by album in folders at destination.')
+parser.add_argument("-m", "--modify", nargs=2, metavar=('TAG','VALUE'), help='Modifies TAG value to VALUE.')
 args = parser.parse_args()
+
 
 # Access the input arguments, and removes any unwanted files
 audio_files = list(filter(lambda file: file is not None, map(lambda file: (mutagen.File(file), file), args.input)))
@@ -87,3 +98,6 @@ if args.sort:
         audio_files = sortAudioFiles(audio_files, args.sort)
     else:
         audio_files = sortAudioFiles(audio_files)
+
+if args.modify:
+    modifyMetadata(args.modify[0], args.modify[1], audio_files)
