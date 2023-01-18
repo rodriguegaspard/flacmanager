@@ -3,6 +3,7 @@ import mutagen
 import argparse
 
 def sortAudioFiles(audio_files, path=""):
+    new_audio_files = []
     for file in audio_files:
         if "artist" in file[0].tags:
             artist = file[0].tags["artist"][0]
@@ -16,15 +17,19 @@ def sortAudioFiles(audio_files, path=""):
         if not os.path.isdir(albumPath):
             os.makedirs(albumPath)
         os.rename(file[1], os.path.normpath(albumPath + "/" + os.path.basename(file[1])))
-        print(file[1])
+        new_audio_files.append((file[0], os.path.normpath(albumPath + "/" + os.path.basename(file[1])))) 
+    return new_audio_files
 
 def renameAudioFiles(audio_files):
+    new_audio_files = []
     for file in audio_files:
         if "tracknumber" in file[0].tags and "title" in file[0].tags:
-            filename = os.path.dirname(file[1]) + "/" + file[0].tags["tracknumber"][0] + " - " + file[0].tags["title"][0] + os.path.splitext(file[1])[1] 
+            filename = os.path.normpath(os.path.dirname(file[1]) + "/" + file[0].tags["tracknumber"][0] + " - " + file[0].tags["title"][0] + os.path.splitext(file[1])[1])
             os.rename(file[1], filename)
+            new_audio_files.append((file[0], filename))
         else:
             print("Could not rename {} : missing tags.".format(os.path.basename(file[1])))
+    return new_audio_files
 
 def printMetadataIssues(audio_files):
     tags = ["album" , "genre", "artist", "tracknumber", "title"]
@@ -73,11 +78,11 @@ if args.check:
     printMetadataIssues(audio_files)
 
 if args.rename:
-    renameAudioFiles(audio_files)
+    audio_files = renameAudioFiles(audio_files)
 
 if args.sort:
     # If no directory is found after the -s/--sort flag, default to current directory
     if os.path.isdir(args.sort):
-        sortAudioFiles(audio_files, args.sort)
+        audio_files = sortAudioFiles(audio_files, args.sort)
     else:
-        sortAudioFiles(audio_files)
+        audio_files = sortAudioFiles(audio_files)
