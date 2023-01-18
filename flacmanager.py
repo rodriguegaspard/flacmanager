@@ -50,14 +50,15 @@ def printMetadataIssues(audio_files):
     print("{}/{} file(s) with metadata issues found.".format(badFiles, len(audio_files)))
 
 def printMetadata(audio_files):
-    print ("{:<40} {:<20} {:<30} {:<10} {:<30}".format('Album', 'Genre', 'Artist', '#', 'Title'))
+    print ("{:<40} {:<20} {:<30} {:<10} {:<30} {:<60}".format('Album', 'Genre', 'Artist', '#', 'Title', 'Filename'))
     for file in audio_files:
         album = file[0].tags["album"][0] if "album" in file[0].tags else "N/A"
         genre = file[0].tags["genre"][0] if "genre" in file[0].tags else "N/A"
         artist = file[0].tags["artist"][0] if "artist" in file[0].tags else "N/A"
         tracknumber = file[0].tags["tracknumber"][0] if "tracknumber" in file[0].tags else "N/A"
         title = file[0].tags["title"][0] if "title" in file[0].tags else "N/A"
-        print("{:<40} {:<20} {:<30} {:<10} {:<30}".format(album, genre, artist, tracknumber, title))
+        filename = os.path.basename(file[1])
+        print("{:<40} {:<20} {:<30} {:<10} {:<30} {:<60}".format(album, genre, artist, tracknumber, title, filename))
 
 # Creating the parser
 parser = argparse.ArgumentParser(description='Manages metadata for multiple audio formats.')
