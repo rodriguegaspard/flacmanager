@@ -76,6 +76,7 @@ parser.add_argument("input", metavar="files", nargs="+", help='audio file(s)')
 parser.add_argument("-l", "--list", action="store_true", default=False, help='Prints the metadata of the audio files.')
 parser.add_argument("-c", "--check", action="store_true", default=False, help='Prints metadata issues (missing tags or album covers).')
 parser.add_argument("-r", "--rename", action="store_true", default=False, help='Renames files using tracknumber and title metadata.')
+parser.add_argument("-s", "--sort", metavar="destination", nargs="?", help='Sorts audio files by artist and by album in folders at the destination specified.')
 parser.add_argument("-m", "--modify", nargs=2, metavar=('TAG','VALUE'), help='Modifies TAG value to VALUE.')
 args = parser.parse_args()
 
