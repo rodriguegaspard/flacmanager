@@ -2,6 +2,30 @@ import os
 import mutagen
 import argparse
 
+def addPicture(picture, audio_files):
+    # Checking if the picture provided is valid
+    image_exts = [".jpg", ".jpeg", ".bmp", ".png", ".gif"]
+    if not os.path.exists(picture) or not os.path.splitext(picture)[1] in image_exts:
+        print("ERROR: {} is not a valid image file.".format(picture))
+    else:
+        # Creating the cover art
+        coverArt = mutagen.flac.Picture()
+        with open(picture, "rb") as image_data:
+            coverArt.data = image_data.read()
+
+        coverArt.type = mutagen.id3.PictureType.COVER_FRONT
+        coverArt.mime = u"image/jpeg"
+        coverArt.width = 500
+        coverArt.height = 500
+        coverArt.depth = 16
+
+        # Adding the cover art to each file
+        choice = input(picture + " will be the new cover art for " + str(len(audio_files)) + " files. Proceed? (Y/n) ")
+        if choice == 'Y':
+            for file in audio_files:
+                file[0].add_picture(coverArt)
+                file[0].save()
+
 def modifyMetadata(tag, value, audio_files):
     if tag not in ["album", "genre", "artist", "tracknumber", "title"]:
         print("ERROR: {} is not a valid tag. Please provide a valid metadata tag. See -l/--list for a list of all relevant metadata tags.".format(tag))
@@ -78,6 +102,7 @@ parser.add_argument("-c", "--check", action="store_true", default=False, help='P
 parser.add_argument("-r", "--rename", action="store_true", default=False, help='Renames files using tracknumber and title metadata.')
 parser.add_argument("-s", "--sort", metavar="destination", nargs="?", help='Sorts audio files by artist and by album in folders at the destination specified.')
 parser.add_argument("-m", "--modify", nargs=2, metavar=('TAG','VALUE'), help='Modifies TAG value to VALUE.')
+parser.add_argument("-p", "--picture", nargs=1, metavar="IMAGE", help="Adds IMAGE as cover art.")
 args = parser.parse_args()
 
 
@@ -102,3 +127,6 @@ if args.sort:
 
 if args.modify:
     modifyMetadata(args.modify[0], args.modify[1], audio_files)
+
+if args.picture:
+    addPicture(args.picture[0], audio_files)
