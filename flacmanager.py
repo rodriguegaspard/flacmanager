@@ -2,6 +2,45 @@ import os
 import mutagen
 import argparse
 
+def interactiveMode(audio_files):
+    choice = ""
+    while choice != "exit" and choice != "quit":
+        choice = input("flacman> ")
+        if choice == "help":
+            print(
+'''
+flacmanager interacive mode commands
+------------------------------------
+    help - Prints this help.
+    list - Lists audio files.
+    check - Checks audio files for errors.
+    order - Iterates through tracks without track numbers and prompts the user.
+    exit or quit - Quits the interactive mode.
+------------------------------------
+'''
+                )
+        elif choice == "list":
+            printMetadata(audio_files)
+        elif choice == "check":
+            printMetadataIssues(audio_files)
+        elif choice == "order":
+            orderTracks(audio_files)
+        elif choice == "modify"
+            tag = input(" What tag do you wish to modify? ")
+            value = input(" What is the new value? ")
+            modifyMetadata(tag, value, audio_files)
+
+# This could be improved..
+def orderTracks(audio_files):
+    unordered_tracks = list(filter(lambda item: item is not None, map(lambda track: track if "tracknumber" not in track[0].tags else None, audio_files)))
+    if len(unordered_tracks) < 1:
+        print("All tracks have a track number. Nothing to do.")
+    else:
+        for track in unordered_tracks:
+            prompt = input("Track number for " + os.path.basename(track[1]) + "? ")
+            track[0].tags["tracknumber"] = prompt
+            track[0].save()
+
 def addPicture(picture, audio_files):
     # Checking if the picture provided is valid
     image_exts = [".jpg", ".jpeg", ".bmp", ".png", ".gif"]
@@ -103,30 +142,33 @@ parser.add_argument("-r", "--rename", action="store_true", default=False, help='
 parser.add_argument("-s", "--sort", metavar="destination", nargs="?", help='Sorts audio files by artist and by album in folders at the destination specified.')
 parser.add_argument("-m", "--modify", nargs=2, metavar=('TAG','VALUE'), help='Modifies TAG value to VALUE.')
 parser.add_argument("-p", "--picture", nargs=1, metavar="IMAGE", help="Adds IMAGE as cover art.")
+parser.add_argument("-i", "--interactive", action="store_true", default=False, help='Interactive mode.')
 args = parser.parse_args()
 
 
 # Access the input arguments, and removes any unwanted files
 audio_files = list(filter(lambda file: file is not None, map(lambda file: (mutagen.File(file), file), args.input)))
+if args.interactive:
+    interactiveMode(audio_files)
+else:
+    if args.list:
+        printMetadata(audio_files)
 
-if args.list:
-    printMetadata(audio_files)
+    if args.check:
+        printMetadataIssues(audio_files)
 
-if args.check:
-    printMetadataIssues(audio_files)
+    if args.rename:
+        audio_files = renameAudioFiles(audio_files)
 
-if args.rename:
-    audio_files = renameAudioFiles(audio_files)
+    if args.sort:
+        # If no directory is found after the -s/--sort flag, default to current directory
+        if os.path.isdir(args.sort):
+            audio_files = sortAudioFiles(audio_files, args.sort)
+        else:
+            audio_files = sortAudioFiles(audio_files)
 
-if args.sort:
-    # If no directory is found after the -s/--sort flag, default to current directory
-    if os.path.isdir(args.sort):
-        audio_files = sortAudioFiles(audio_files, args.sort)
-    else:
-        audio_files = sortAudioFiles(audio_files)
+    if args.modify:
+        modifyMetadata(args.modify[0], args.modify[1], audio_files)
 
-if args.modify:
-    modifyMetadata(args.modify[0], args.modify[1], audio_files)
-
-if args.picture:
-    addPicture(args.picture[0], audio_files)
+    if args.picture:
+        addPicture(args.picture[0], audio_files)
