@@ -38,14 +38,14 @@ flacmanager interacive mode commands
         elif choice == "order":
             orderAudioFiles(audio_files)
         elif choice == "modify":
-            tag = input(" What tag do you wish to modify? ")
+            tag = input(" What tag do you wish to modify? (album/artist/genre/tracknumber/title)? ")
             value = input(" What is the new value? ")
             modifyMetadata(tag, value, audio_files)
         elif choice == "tweak":
             tweakAudioFiles(audio_files)
 
 def tweakAudioFiles(audio_files):
-    tag = input(" What tag do you wish to modify? ")
+    tag = input(" What tag do you wish to modify (album/artist/genre/tracknumber/title)? ")
     for file in audio_files:
         old_value = "(Old value = " + file[0].tags[tag][0] + ")" if tag in file[0].tags else ""
         value = input(" New value for the " + tag.upper() + " tag of '" + os.path.basename(file[1]) + "' ? " + old_value + " - /c to continue, q to exit/ ")
@@ -136,14 +136,14 @@ def printMetadataIssues(audio_files):
     badFiles = 0
     for file in audio_files:
         issues = 0
-        issuesList = ""
+        issuesList = " "
         for tag in tags:
             if tag not in file[0].tags:
                 issues+=1
-                issuesList+=tag
+                issuesList+=tag+" "
         if len(file[0].pictures) < 1:
             issues+=1
-            issuesList+="album_cover"
+            issuesList+="album_cover "
         if issues>0:
             badFiles+=1
             print("{} issue(s) found for \'{}\' ({}).".format(issues, os.path.basename(file[1]), issuesList))
