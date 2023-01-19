@@ -2,6 +2,17 @@ import os
 import mutagen
 import argparse
 
+def filterAudioFiles(tag, value, audio_files):
+    if tag not in ["album", "artist", "genre", "tracknumber", "title"]:
+        print("ERROR: Invalid tag. Possible values are album, artist, genre, tracknumber and title.")
+    else:
+        filtered_audio_files = [file for file in audio_files if file[0].tags[tag][0] == value]
+        if len(audio_files) < 1:
+            print("Filter returned an empty argument list. Defaulting to whole argument list.")
+            return audio_files
+        else:
+            return filtered_audio_files
+
 def interactiveMode(audio_files):
     choice = ""
     while choice != "exit" and choice != "quit":
@@ -163,14 +174,17 @@ parser.add_argument("-s", "--sort", metavar="destination", nargs="?", help='Sort
 parser.add_argument("-m", "--modify", nargs=2, metavar=('TAG','VALUE'), help='Modifies TAG value to VALUE.')
 parser.add_argument("-p", "--picture", nargs=1, metavar="IMAGE", help="Adds IMAGE as cover art.")
 parser.add_argument("-i", "--interactive", action="store_true", default=False, help='Interactive mode.')
+parser.add_argument("-f", "--filter", nargs=2, metavar=('TAG', 'VALUE'), help="Filters the input files using tag values.")
 args = parser.parse_args()
-
 
 # Access the input arguments, and removes any unwanted files
 audio_files = list(filter(lambda file: file is not None, map(lambda file: (mutagen.File(file), file), args.input)))
+
 if args.interactive:
     interactiveMode(audio_files)
 else:
+    if args.filter:
+        audio_files=filterAudioFiles(args.filter[0], args.filter[1], audio_files)
     if args.list:
         printMetadata(audio_files)
 
