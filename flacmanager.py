@@ -14,7 +14,8 @@ flacmanager interacive mode commands
     help - Prints this help.
     list - Lists audio files.
     check - Checks audio files for errors.
-    order - Iterates through tracks without track numbers and prompts the user.
+    order - Iterates through audio files without track numbers and prompts the user.
+    tweak - Iterates through audio files and prompts the user for tag modification.
     exit or quit - Quits the interactive mode.
 ------------------------------------
 '''
@@ -24,14 +25,28 @@ flacmanager interacive mode commands
         elif choice == "check":
             printMetadataIssues(audio_files)
         elif choice == "order":
-            orderTracks(audio_files)
+            orderAudioFiles(audio_files)
         elif choice == "modify":
             tag = input(" What tag do you wish to modify? ")
             value = input(" What is the new value? ")
             modifyMetadata(tag, value, audio_files)
+        elif choice == "tweak":
+            tweakAudioFiles(audio_files)
 
-# This could be improved..
-def orderTracks(audio_files):
+def tweakAudioFiles(audio_files):
+    tag = input(" What tag do you wish to modify? ")
+    for file in audio_files:
+        old_value = "(Old value = " + file[0].tags[tag][0] + ")" if tag in file[0].tags else ""
+        value = input(" New value for the " + tag.upper() + " tag of '" + os.path.basename(file[1]) + "' ? " + old_value + " - /c to continue, q to exit/ ")
+        if value == 'q':
+            break
+        elif value == 'c':
+            continue
+        else:
+            file[0].tags[tag] = value
+            file[0].save()
+
+def orderAudioFiles(audio_files):
     unordered_tracks = list(filter(lambda item: item is not None, map(lambda track: track if "tracknumber" not in track[0].tags else None, audio_files)))
     if len(unordered_tracks) < 1:
         print("All tracks have a track number. Nothing to do.")
