@@ -154,7 +154,7 @@ def getAlbum(file):
 
 def printMetadata(audio_files):
     audio_files.sort(key=getAlbum)
-    print ("{:<40} {:<20} {:<30} {:<10} {:<30} {:<60}".format('Album', 'Genre', 'Artist', '#', 'Title', 'Filename'))
+    print ("{:<40} {:<20} {:<30} {:<10} {:<60} {:<60}".format('Album', 'Genre', 'Artist', '#', 'Title', 'Filename'))
     for file in audio_files:
         album = file[0].tags["album"][0] if "album" in file[0].tags else "N/A"
         genre = file[0].tags["genre"][0] if "genre" in file[0].tags else "N/A"
@@ -162,7 +162,7 @@ def printMetadata(audio_files):
         tracknumber = file[0].tags["tracknumber"][0] if "tracknumber" in file[0].tags else "N/A"
         title = file[0].tags["title"][0] if "title" in file[0].tags else "N/A"
         filename = os.path.basename(file[1])
-        print("{:<40} {:<20} {:<30} {:<10} {:<30} {:<60}".format(album, genre, artist, tracknumber, title, filename))
+        print("{:<40} {:<20} {:<30} {:<10} {:<60} {:<60}".format(album, genre, artist, tracknumber, title, filename))
 
 # Creating the parser
 parser = argparse.ArgumentParser(description='Manages metadata for multiple audio formats.')
