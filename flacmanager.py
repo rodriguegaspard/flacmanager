@@ -187,11 +187,12 @@ args = parser.parse_args()
 # Access the input arguments, and removes any unwanted files
 audio_files = list(filter(lambda file: file is not None, map(lambda file: (mutagen.File(file), file), args.input)))
 
+if args.filter:
+    audio_files=filterAudioFiles(args.filter[0], args.filter[1], audio_files)
+
 if args.interactive:
     interactiveMode(audio_files)
 else:
-    if args.filter:
-        audio_files=filterAudioFiles(args.filter[0], args.filter[1], audio_files)
     if args.list:
         printMetadata(audio_files)
 
