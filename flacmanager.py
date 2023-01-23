@@ -58,7 +58,7 @@ def tweakAudioFiles(audio_files):
             file[0].save()
 
 def orderAudioFiles(audio_files):
-    unordered_tracks = list(filter(lambda item: item is not None, map(lambda track: track if "tracknumber" not in track[0].tags else None, audio_files)))
+    unordered_tracks = list(filter(lambda item: item is not None, map(lambda track: track if "tracknumber" not in track[0].tags and len(track[0].tags["tracknumber"][0]) > 1 else None, audio_files)))
     if len(unordered_tracks) < 1:
         print("All tracks have a track number. Nothing to do.")
     else:
