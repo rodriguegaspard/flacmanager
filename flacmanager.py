@@ -139,13 +139,20 @@ def printMetadataIssues(audio_files):
         issuesList = " "
         for tag in tags:
             if tag not in file[0].tags:
-                issues+=1
-                issuesList+=tag+" "
+                issues += 1
+                issuesList += tag+" "
+            elif tag == "tracknumber" and len(file[0].tags[tag][0]) < 2:
+                issues += 1
+                issuesList += "bad_tracknumber_format "
+            elif file[0].tags[tag][0].count('?') or file[0].tags[tag][0].count('!') or file[0].tags[tag][0].count('/') or file[0].tags[tag][0].count('\\'):
+                issues += 1
+                issuesList += " "+ tag + "_bad_characters"
+        # Checking if album has any cover
         if len(file[0].pictures) < 1:
-            issues+=1
-            issuesList+="album_cover "
+            issues += 1
+            issuesList += "album_cover "
         if issues>0:
-            badFiles+=1
+            badFiles += 1
             print("{} issue(s) found for \'{}\' ({}).".format(issues, os.path.basename(file[1]), issuesList))
     print("{}/{} file(s) with metadata issues found.".format(badFiles, len(audio_files)))
 
