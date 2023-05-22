@@ -1,12 +1,13 @@
 import os
 import mutagen
 import argparse
+import re
 
 def filterAudioFiles(tag, value, audio_files):
     if tag not in ["album", "artist", "genre", "tracknumber", "title"]:
         print("ERROR: Invalid tag. Possible values are album, artist, genre, tracknumber and title.")
     else:
-        filtered_audio_files = [file for file in audio_files if file[0].tags[tag][0] == value]
+        filtered_audio_files = [file for file in audio_files if re.match(value, file[0].tags[tag][0])]
         if len(audio_files) < 1:
             print("Filter returned an empty argument list. Defaulting to whole argument list.")
             return audio_files
