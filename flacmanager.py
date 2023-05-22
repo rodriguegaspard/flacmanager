@@ -20,7 +20,7 @@ def interactiveMode(audio_files):
         choice = input("flacman> ")
         if choice == "help":
             print(
-'''
+                    '''
 flacmanager interacive mode commands
 ------------------------------------
     help - Prints this help.
@@ -31,7 +31,7 @@ flacmanager interacive mode commands
     exit or quit - Quits the interactive mode.
 ------------------------------------
 '''
-                )
+)
         elif choice == "list":
             printMetadata(audio_files)
         elif choice == "check":
@@ -59,14 +59,26 @@ def tweakAudioFiles(audio_files):
             file[0].save()
 
 def orderAudioFiles(audio_files):
-    unordered_tracks = list(filter(lambda item: item is not None, map(lambda track: track if "tracknumber" not in track[0].tags and len(track[0].tags["tracknumber"][0]) > 1 else None, audio_files)))
-    if len(unordered_tracks) < 1:
-        print("All tracks have a track number. Nothing to do.")
-    else:
-        for track in unordered_tracks:
-            prompt = input("Track number for " + os.path.basename(track[1]) + "? ")
-            track[0].tags["tracknumber"] = prompt
-            track[0].save()
+    # TO-DO : Sort the tracks regardless of the notation, to ensure that the order of the album is preserved (Print the result and prompt the user before applying changes)
+        track_counter = 0
+        order_counter = 0
+        for file in audio_files:
+            track_counter += 1
+            if file[0].tags["tracknumber"][0] == f'{track_counter:02}':
+                order_counter += 1
+                continue
+            else:
+                value = print(file[0].tags["tracknumber"][0] + "will be replaced by" + f'{track_counter:02}' + ". Proceed? Y/n")
+            if value == 'n':
+                break
+            elif value == 'Y' :
+                file[0].tags["tracknumber"] = f'track_counter:02'
+                file[0].save()
+            else:
+                print("Unrecognized option.")
+                break
+        if len(audio_files) == order_counter:
+            print("All track numbers are ordered. Nothing to do.")
 
 def addPicture(picture, audio_files):
     # Checking if the picture provided is valid
