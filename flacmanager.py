@@ -72,7 +72,7 @@ def orderAudioFiles(audio_files):
             if value == 'n':
                 break
             elif value == 'Y' :
-                file[0].tags["tracknumber"] = f'track_counter:02'
+                file[0].tags["tracknumber"] = f'{track_counter:02}'
                 file[0].save()
             else:
                 print("Unrecognized option.")
