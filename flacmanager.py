@@ -68,7 +68,7 @@ def orderAudioFiles(audio_files):
                 order_counter += 1
                 continue
             else:
-                value = print(file[0].tags["tracknumber"][0] + "will be replaced by" + f'{track_counter:02}' + ". Proceed? Y/n")
+                value = input(file[0].tags["tracknumber"][0] + " will be replaced by " + f'{track_counter:02}' + ". Proceed? (Y/n) ")
             if value == 'n':
                 break
             elif value == 'Y' :
