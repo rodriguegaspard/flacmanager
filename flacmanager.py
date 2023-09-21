@@ -1,7 +1,10 @@
 import os
-import mutagen
+import mutagen 
 import argparse
+import sys 
 import re
+import glob
+from mutagen._util import MutagenError
 
 def filterAudioFiles(tag, value, audio_files):
     if tag not in ["album", "artist", "genre", "tracknumber", "title"]:
@@ -26,7 +29,7 @@ flacmanager interacive mode commands
     help - Prints this help.
     list - Lists audio files.
     check - Checks audio files for errors.
-    order - Iterates through audio files without track numbers and prompts the user.
+    order - Iterates through audio files without correct track numbers and prompts the user.
     tweak - Iterates through audio files and prompts the user for tag modification.
     exit or quit - Quits the interactive mode.
 ------------------------------------
@@ -144,6 +147,7 @@ def renameAudioFiles(audio_files):
             print("Could not rename {} : missing tags.".format(os.path.basename(file[1])))
     return new_audio_files
 
+
 def printMetadataIssues(audio_files):
     tags = ["album" , "genre", "artist", "tracknumber", "title"]
     badFiles = 0
@@ -184,9 +188,41 @@ def printMetadata(audio_files):
         filename = os.path.basename(file[1])
         print("{:<40} {:<20} {:<30} {:<10} {:<50} {:<50}".format(album, genre, artist, tracknumber, title, filename))
 
+def parseAudioFiles(arguments):
+    audio_files = []
+    mutagen_file = None
+    for file in list(arguments):
+        try:
+            mutagen_file = mutagen.File(file)
+        except MutagenError:
+            print("Something went wrong when trying to read some audio files given as arguments.")
+        if mutagen_file is not None:
+            audio_files.append((mutagen.File(file), file))
+    if not audio_files:
+        print("No valid audio files found in arguments. Nothing to do.")
+        sys.exit()
+    return audio_files
+
+def parseAudioDirectories(arguments):
+    audio_files = []
+    mutagen_file = None
+    for directory in arguments:
+        for file in glob.glob(directory + "/*"):
+            try:
+                mutagen_file = mutagen.File(file)
+            except MutagenError:
+                print("Something went wrong while trying to read some audio files in the directories given as arguments.")
+            if mutagen_file is not None:
+                audio_files.append((mutagen.File(file), file))
+    if not audio_files:
+        print("No valid audio files found in the directories given as arguments. Nothing to do.")
+        sys.exit()
+    return audio_files
+
 # Creating the parser
 parser = argparse.ArgumentParser(description='Manages metadata for multiple audio formats.')
 parser.add_argument("input", metavar="files", nargs="+", help='audio file(s)')
+parser.add_argument("-d", "--directory", action="store_true", help='Takes directories containing audio files as argument.')
 parser.add_argument("-l", "--list", action="store_true", default=False, help='Prints the metadata of the audio files.')
 parser.add_argument("-c", "--check", action="store_true", default=False, help='Prints metadata issues (missing tags or album covers).')
 parser.add_argument("-r", "--rename", action="store_true", default=False, help='Renames files using tracknumber and title metadata.')
@@ -197,8 +233,12 @@ parser.add_argument("-i", "--interactive", action="store_true", default=False, h
 parser.add_argument("-f", "--filter", nargs=2, metavar=('TAG', 'VALUE'), help="Filters the input files using tag values.")
 args = parser.parse_args()
 
-# Access the input arguments, and removes any unwanted files
-audio_files = list(filter(lambda file: file is not None, map(lambda file: (mutagen.File(file), file), args.input)))
+# Access the input arguments
+
+if args.directory:
+    audio_files = parseAudioDirectories(args.input) 
+else:
+    audio_files = parseAudioFiles(args.input)
 
 if args.filter:
     audio_files=filterAudioFiles(args.filter[0], args.filter[1], audio_files)
