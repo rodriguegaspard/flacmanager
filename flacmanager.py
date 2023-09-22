@@ -203,17 +203,19 @@ def parseAudioFiles(arguments):
         sys.exit()
     return audio_files
 
-def parseAudioDirectories(arguments):
+def parseAudioDirectories(arguments, is_recursive=False):
     audio_files = []
     mutagen_file = None
+    glob_regex = "/*" if not is_recursive else "/**/*"
     for directory in arguments:
-        for file in glob.glob(directory + "/*"):
-            try:
-                mutagen_file = mutagen.File(file)
-            except MutagenError:
-                print("Something went wrong while trying to read some audio files in the directories given as arguments.")
-            if mutagen_file is not None:
-                audio_files.append((mutagen.File(file), file))
+        for file in glob.glob(directory + glob_regex, recursive=is_recursive):
+            if not os.path.isdir(file):
+                try:
+                    mutagen_file = mutagen.File(file)
+                except MutagenError:
+                    print("Something went wrong while trying to read some audio files in the directories given as arguments.")
+                if mutagen_file is not None:
+                    audio_files.append((mutagen.File(file), file))
     if not audio_files:
         print("No valid audio files found in the directories given as arguments. Nothing to do.")
         sys.exit()
@@ -223,6 +225,7 @@ def parseAudioDirectories(arguments):
 parser = argparse.ArgumentParser(description='Manages metadata for multiple audio formats.')
 parser.add_argument("input", metavar="files", nargs="+", help='audio file(s)')
 parser.add_argument("-d", "--directory", action="store_true", help='Takes directories containing audio files as argument.')
+parser.add_argument("-R", "--recursive", action="store_true", help='Searches recursively in the directories provided as arguments. Can only be used in conjonction with the -d/--directory flag.')
 parser.add_argument("-l", "--list", action="store_true", default=False, help='Prints the metadata of the audio files.')
 parser.add_argument("-c", "--check", action="store_true", default=False, help='Prints metadata issues (missing tags or album covers).')
 parser.add_argument("-r", "--rename", action="store_true", default=False, help='Renames files using tracknumber and title metadata.')
@@ -236,7 +239,7 @@ args = parser.parse_args()
 # Access the input arguments
 
 if args.directory:
-    audio_files = parseAudioDirectories(args.input) 
+    audio_files = parseAudioDirectories(args.input, args.recursive) 
 else:
     audio_files = parseAudioFiles(args.input)
 
