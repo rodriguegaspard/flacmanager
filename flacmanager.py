@@ -5,6 +5,7 @@ import sys
 import re
 import glob
 from mutagen._util import MutagenError
+from base64 import b64encode
 
 def filterAudioFiles(tag, value, audio_files):
     if tag not in ["album", "artist", "genre", "tracknumber", "title"]:
@@ -104,9 +105,13 @@ def addPicture(picture, audio_files):
         choice = input(picture + " will be the new cover art for " + str(len(audio_files)) + " files. Proceed? (Y/n) ")
         if choice == 'Y':
             for file in audio_files:
-                file[0].clear_pictures()
-                file[0].add_picture(coverArt)
+                if type(file) is mutagen.flac.FLAC :
+                    file[0].clear_pictures()
+                    file[0].add_picture(coverArt)
+                else :
+                    file[0]['metadata_block_picture'] = b64encode(coverArt.write()).decode('ascii')
                 file[0].save()
+                    
 
 def modifyMetadata(tag, value, audio_files):
     if tag not in ["album", "genre", "artist", "tracknumber", "title"]:
