@@ -24,30 +24,41 @@ def interactiveMode(audio_files):
         choice = input("flacman> ")
         if choice == "help":
             print(
-                    '''
+                '''
 flacmanager interacive mode commands
 ------------------------------------
     help - Prints this help.
     list - Lists audio files.
     check - Checks audio files for errors.
-    order - Iterates through audio files without correct track numbers and prompts the user.
     tweak - Iterates through audio files and prompts the user for tag modification.
+    zero-padding - Adds a zero before every single digit, in order to sort the tracks by tracknumber correctly.
     exit or quit - Quits the interactive mode.
 ------------------------------------
 '''
-)
+            )
         elif choice == "list":
             printMetadata(audio_files)
         elif choice == "check":
             printMetadataIssues(audio_files)
-        elif choice == "order":
-            orderAudioFiles(audio_files)
+        elif choice == "zero-padding":
+            zeroPadding(audio_files)
         elif choice == "modify":
             tag = input(" What tag do you wish to modify? (album/artist/genre/tracknumber/title)? ")
             value = input(" What is the new value? ")
             modifyMetadata(tag, value, audio_files)
         elif choice == "tweak":
             tweakAudioFiles(audio_files)
+
+def zeroPadding(audio_files):
+    counter = 0
+    for file in audio_files:
+        tracknumber = file[0].tags["tracknumber"][0]
+        if len(tracknumber) == 1 and tracknumber.isdigit():
+            file[0].tags["tracknumber"] = "0" + tracknumber
+            file[0].save()
+            counter+=1
+    if counter == 0:
+        print("No changes were made.")
 
 def tweakAudioFiles(audio_files):
     tag = input(" What tag do you wish to modify (album/artist/genre/tracknumber/title)? ")
