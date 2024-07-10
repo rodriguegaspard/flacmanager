@@ -73,28 +73,6 @@ def tweakAudioFiles(audio_files):
             file[0].tags[tag] = value
             file[0].save()
 
-def orderAudioFiles(audio_files):
-    # TO-DO : Sort the tracks regardless of the notation, to ensure that the order of the album is preserved (Print the result and prompt the user before applying changes)
-        track_counter = 0
-        order_counter = 0
-        for file in audio_files:
-            track_counter += 1
-            if file[0].tags["tracknumber"][0] == f'{track_counter:02}':
-                order_counter += 1
-                continue
-            else:
-                value = input(file[0].tags["tracknumber"][0] + " will be replaced by " + f'{track_counter:02}' + ". Proceed? (Y/n) ")
-            if value == 'n':
-                break
-            elif value == 'Y' :
-                file[0].tags["tracknumber"] = f'{track_counter:02}'
-                file[0].save()
-            else:
-                print("Unrecognized option.")
-                break
-        if len(audio_files) == order_counter:
-            print("All track numbers are ordered. Nothing to do.")
-
 def addPicture(picture, audio_files):
     # Checking if the picture provided is valid
     image_exts = [".jpg", ".jpeg", ".bmp", ".png", ".gif"]
@@ -122,7 +100,7 @@ def addPicture(picture, audio_files):
                 else :
                     file[0]['metadata_block_picture'] = b64encode(coverArt.write()).decode('ascii')
                 file[0].save()
-                    
+
 
 def modifyMetadata(tag, value, audio_files):
     if tag not in ["album", "genre", "artist", "tracknumber", "title"]:
@@ -237,6 +215,15 @@ def parseAudioDirectories(arguments, is_recursive=False):
         sys.exit()
     return audio_files
 
+def orderAudioFiles(audio_files):
+    for file in audio_files:
+        if "tracknumber" in file[0].tags and "title" in file[0].tags:
+            new_title = file[0].tags["tracknumber"][0] + " - " + file[0].tags["title"][0]
+            file[0].tags["TITLE"] = new_title
+            file[0].save()
+        else:
+            print("Could not rename {} : missing tags.".format(os.path.basename(file[1])))
+
 # Creating the parser
 parser = argparse.ArgumentParser(description='Manages metadata for multiple audio formats.')
 parser.add_argument("input", metavar="files", nargs="+", help='audio file(s)')
@@ -250,6 +237,8 @@ parser.add_argument("-m", "--modify", nargs=2, metavar=('TAG','VALUE'), help='Mo
 parser.add_argument("-p", "--picture", nargs=1, metavar="IMAGE", help="Adds IMAGE as cover art.")
 parser.add_argument("-i", "--interactive", action="store_true", default=False, help='Interactive mode.')
 parser.add_argument("-f", "--filter", nargs=2, metavar=('TAG', 'VALUE'), help="Filters the input files using tag values.")
+parser.add_argument("-o", "--order", action="store_true", help="Appends the tracknumber (if it exists) to the title tag value, useful for some devices.")
+parser.add_argument("-z", "--zeropadding", action="store_true", help="Automatic left zero-padding for single-digit tracknumbers, so that they're ordered properly.")
 args = parser.parse_args()
 
 # Access the input arguments
@@ -270,6 +259,12 @@ else:
 
     if args.check:
         printMetadataIssues(audio_files)
+
+    if args.zeropadding:
+        zeroPadding(audio_files)
+
+    if args.order:
+        orderAudioFiles(audio_files)
 
     if args.rename:
         audio_files = renameAudioFiles(audio_files)
