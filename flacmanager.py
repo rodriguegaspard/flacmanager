@@ -221,6 +221,19 @@ def orderAudioFiles(audio_files):
         else:
             print("Could not rename {} : missing tags.".format(os.path.basename(file[1])))
 
+def deleteMetadataTags(audio_files):
+    print("WARNING : This will remove ALL metadata from the selected files, do you want to proceed? Y/N")
+    choice = input()
+    if choice == "Y":
+        for file in audio_files:
+            file[0].delete()
+            file[0].clear_pictures()
+            file[0].save()
+        print("The selected files have successfully had their metadata deleted.")
+    else:
+        print("No modifications have been made.")
+
+
 # Creating the parser
 parser = argparse.ArgumentParser(description='Manages metadata for multiple audio formats.')
 parser.add_argument("input", metavar="files", nargs="+", help='audio file(s)')
@@ -236,6 +249,7 @@ parser.add_argument("-i", "--interactive", action="store_true", default=False, h
 parser.add_argument("-f", "--filter", nargs=2, metavar=('TAG', 'VALUE'), help="Filters the input files using tag values.")
 parser.add_argument("-o", "--order", action="store_true", help="Appends the tracknumber (if it exists) to the title tag value, useful for some devices.")
 parser.add_argument("-z", "--zeropadding", action="store_true", help="Automatic left zero-padding for single-digit tracknumbers, so that they're ordered properly.")
+parser.add_argument("-D", "--delete", action="store_true", help='Deletes every metadata tag from the audio files given as arguments.')
 args = parser.parse_args()
 
 # Access the input arguments
