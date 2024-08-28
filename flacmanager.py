@@ -265,20 +265,20 @@ if args.filter:
 if args.interactive:
     interactiveMode(audio_files)
 else:
-    if args.list:
-        printMetadata(audio_files)
-
-    if args.check:
-        printMetadataIssues(audio_files)
+    if args.delete:
+        deleteMetadataTags(audio_files)
 
     if args.zeropadding:
         zeroPadding(audio_files)
 
+    if args.rename:
+        audio_files = renameAudioFiles(audio_files)
+
     if args.order:
         orderAudioFiles(audio_files)
 
-    if args.rename:
-        audio_files = renameAudioFiles(audio_files)
+    if args.modify:
+        modifyMetadata(args.modify[0], args.modify[1], audio_files)
 
     if args.sort:
         # If no directory is found after the -s/--sort flag, default to current directory
@@ -287,8 +287,11 @@ else:
         else:
             audio_files = sortAudioFiles(audio_files)
 
-    if args.modify:
-        modifyMetadata(args.modify[0], args.modify[1], audio_files)
-
     if args.picture:
         addPicture(args.picture[0], audio_files)
+
+    if args.list:
+        printMetadata(audio_files)
+
+    if args.check:
+        printMetadataIssues(audio_files)
