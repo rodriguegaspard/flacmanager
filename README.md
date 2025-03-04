@@ -1,8 +1,16 @@
 # FLACMANAGER
 Simple Python script for managing .flac audio files (bulk-editing metadata and ordering).
 
-# USAGE & AVAILABLE COMMANDS
+# INSTALLATION
+```bash
+git clone https://github.com/rodriguegaspard/flacmanager
+cd flacmanager
+python -m venv .
+source bin/activate
+pip install -r requirements.txt
+```
 
+# USAGE
 ```
 usage: flacmanager [-h] [-d] [-R] [-l] [-c] [-r] [-s [destination]] [-m TAG VALUE] [-p IMAGE] [-i] [-f TAG VALUE] [-o] [-z] [-D] files [files ...]
 
