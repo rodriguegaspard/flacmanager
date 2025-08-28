@@ -146,28 +146,6 @@ def renameAudioFiles(audio_files):
     return new_audio_files
 
 
-def printMetadataIssues(audio_files):
-    tags = ["album" , "genre", "artist", "tracknumber", "title"]
-    badFiles = 0
-    for file in audio_files:
-        issues = 0
-        issuesList = " "
-        for tag in tags:
-            if tag not in file[0].tags:
-                issues += 1
-                issuesList += tag
-            elif tag == "tracknumber" and len(file[0].tags[tag][0]) < 2:
-                issues += 1
-                issuesList += "bad_tracknumber_format"
-            elif file[0].tags[tag][0].count('?') or file[0].tags[tag][0].count('!') or file[0].tags[tag][0].count('/') or file[0].tags[tag][0].count('\\'):
-                issues += 1
-                issuesList += "bad_characters(" + tag + ")"
-            issuesList += " "
-        if issues>0:
-            badFiles += 1
-            print("{} issue(s) found for \'{}\' ({}).".format(issues, os.path.basename(file[1]), issuesList))
-    print("{}/{} file(s) with metadata issues found.".format(badFiles, len(audio_files)))
-
 def getAlbum(file):
     return file[0].tags["album"][0] if "album" in file[0].tags else "N/A"
 
@@ -248,7 +226,6 @@ parser.add_argument("input", metavar="files", nargs="+", help='audio file(s)')
 parser.add_argument("-d", "--directory", action="store_true", help='Takes directories containing audio files as argument.')
 parser.add_argument("-R", "--recursive", action="store_true", help='Searches recursively in the directories provided as arguments. Can only be used in conjonction with the -d/--directory flag.')
 parser.add_argument("-l", "--list", action="store_true", default=False, help='Prints the metadata of the audio files.')
-parser.add_argument("-c", "--check", action="store_true", default=False, help='Prints metadata issues (missing tags or album covers).')
 parser.add_argument("-r", "--rename", action="store_true", default=False, help='Renames files using tracknumber and title metadata.')
 parser.add_argument("-s", "--sort", metavar="destination", nargs="?", help='Sorts audio files by artist and by album in folders at the destination specified.')
 parser.add_argument("-m", "--modify", nargs=2, metavar=('TAG','VALUE'), help='Modifies TAG value to VALUE.')
@@ -300,6 +277,3 @@ else:
 
     if args.list:
         printMetadata(audio_files)
-
-    if args.check:
-        printMetadataIssues(audio_files)
