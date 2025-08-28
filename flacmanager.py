@@ -207,18 +207,29 @@ def orderAudioFiles(audio_files):
         else:
             print("Could not rename {} : missing tags.".format(os.path.basename(file[1])))
 
-def deleteMetadataTags(audio_files):
-    print("WARNING : This will remove ALL metadata from the selected files, do you want to proceed? Y/N")
+
+def deleteCoverArtAndLyrics(audio_files):
+    print("WARNING : This will remove ALL cover art and lyrics tags from the selected files, do you wish to proceed? Y/N")
     choice = input()
     if choice == "Y":
         for file in audio_files:
-            file[0].delete()
             file[0].clear_pictures()
             file[0].save()
-        print("The selected files have successfully had their metadata deleted.")
+            removeLyrics(audio_files)
     else:
         print("No modifications have been made.")
 
+
+def removeLyrics(audio_files):
+    lyric_keys = ["LYRICS", "UNSYNCEDLYRICS", "LYRIC"]
+    removed = False
+    for file in audio_files:
+        for key in file[0].tags.items():
+            if key[0].upper() in lyric_keys:
+                del file[0].tags[key[0]]
+                removed = True
+        if removed:
+            file[0].save()
 
 # Creating the parser
 parser = argparse.ArgumentParser(description='Manages metadata for multiple audio formats.')
@@ -234,7 +245,7 @@ parser.add_argument("-i", "--interactive", action="store_true", default=False, h
 parser.add_argument("-f", "--filter", nargs=2, metavar=('TAG', 'VALUE'), help="Filters the input files using tag values.")
 parser.add_argument("-o", "--order", action="store_true", help="Appends the tracknumber (if it exists) to the title tag value, useful for some devices.")
 parser.add_argument("-z", "--zeropadding", action="store_true", help="Automatic left zero-padding for single-digit tracknumbers, so that they're ordered properly.")
-parser.add_argument("-D", "--delete", action="store_true", help='Deletes every metadata tag from the audio files given as arguments.')
+parser.add_argument("-D", "--delete", action="store_true", help='Deletes cover art and lyrics from the audio files given as arguments.')
 args = parser.parse_args()
 
 # Access the input arguments
@@ -251,7 +262,7 @@ if args.interactive:
     interactiveMode(audio_files)
 else:
     if args.delete:
-        deleteMetadataTags(audio_files)
+        deleteCoverArtAndLyrics(audio_files)
 
     if args.zeropadding:
         zeroPadding(audio_files)
