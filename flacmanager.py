@@ -7,6 +7,7 @@ import glob
 from mutagen._util import MutagenError
 from base64 import b64encode
 
+
 def filterAudioFiles(tag, value, audio_files):
     if tag not in ["album", "artist", "genre", "tracknumber", "title"]:
         print("ERROR: Invalid tag. Possible values are album, artist, genre, tracknumber and title.")
@@ -18,8 +19,9 @@ def filterAudioFiles(tag, value, audio_files):
         else:
             return filtered_audio_files
 
+
 def interactiveMode(audio_files):
-    choice = ""
+    print("Welcome to the interactive mode of flacmanager. Type help for a list of commands, or exit/quit to leave.")
     while choice != "exit" and choice != "quit":
         choice = input("flacman> ")
         if choice == "help":
@@ -29,18 +31,15 @@ flacmanager interacive mode commands
 ------------------------------------
     help - Prints this help.
     list - Lists audio files.
-    check - Checks audio files for errors.
     tweak - Iterates through audio files and prompts the user for tag modification.
-    zero-padding - Adds a zero before every single digit, in order to sort the tracks by tracknumber correctly.
+    zeropadding - Adds a zero before every single digit, in order to sort the tracks by tracknumber correctly.
     exit or quit - Quits the interactive mode.
 ------------------------------------
 '''
             )
         elif choice == "list":
             printMetadata(audio_files)
-        elif choice == "check":
-            printMetadataIssues(audio_files)
-        elif choice == "zero-padding":
+        elif choice == "zeropadding":
             zeroPadding(audio_files)
         elif choice == "modify":
             tag = input(" What tag do you wish to modify? (album/artist/genre/tracknumber/title)? ")
@@ -48,6 +47,7 @@ flacmanager interacive mode commands
             modifyMetadata(tag, value, audio_files)
         elif choice == "tweak":
             tweakAudioFiles(audio_files)
+
 
 def zeroPadding(audio_files):
     counter = 0
@@ -59,6 +59,7 @@ def zeroPadding(audio_files):
             counter+=1
     if counter == 0:
         print("No changes were made.")
+
 
 def tweakAudioFiles(audio_files):
     tag = input(" What tag do you wish to modify (album/artist/genre/tracknumber/title)? ")
@@ -72,6 +73,7 @@ def tweakAudioFiles(audio_files):
         else:
             file[0].tags[tag] = value
             file[0].save()
+
 
 def addPicture(picture, audio_files):
     # Checking if the picture provided is valid
@@ -112,6 +114,7 @@ def modifyMetadata(tag, value, audio_files):
                 file[0].tags[tag.upper()] = value
                 file[0].save()
 
+
 def sortAudioFiles(audio_files, path=""):
     new_audio_files = []
     for file in audio_files:
@@ -129,6 +132,7 @@ def sortAudioFiles(audio_files, path=""):
         os.rename(file[1], os.path.normpath(albumPath + "/" + os.path.basename(file[1])))
         new_audio_files.append((file[0], os.path.normpath(albumPath + "/" + os.path.basename(file[1])))) 
     return new_audio_files
+
 
 def renameAudioFiles(audio_files):
     new_audio_files = []
@@ -167,6 +171,7 @@ def printMetadataIssues(audio_files):
 def getAlbum(file):
     return file[0].tags["album"][0] if "album" in file[0].tags else "N/A"
 
+
 def printMetadata(audio_files):
     audio_files.sort(key=getAlbum)
     print("{:<40} {:<20} {:<30} {:<10} {:<50} {:<50}".format('Album', 'Genre', 'Artist', '#', 'Title', 'Filename'))
@@ -178,6 +183,7 @@ def printMetadata(audio_files):
         title = file[0].tags["title"][0] if "title" in file[0].tags else "N/A"
         filename = os.path.basename(file[1])
         print("{:<40} {:<20} {:<30} {:<10} {:<50} {:<50}".format(album, genre, artist, tracknumber, title, filename))
+
 
 def parseAudioFiles(arguments):
     audio_files = []
@@ -193,6 +199,7 @@ def parseAudioFiles(arguments):
         print("No valid audio files found in arguments. Nothing to do.")
         sys.exit()
     return audio_files
+
 
 def parseAudioDirectories(arguments, is_recursive=False):
     audio_files = []
@@ -211,6 +218,7 @@ def parseAudioDirectories(arguments, is_recursive=False):
         print("No valid audio files found in the directories given as arguments. Nothing to do.")
         sys.exit()
     return audio_files
+
 
 def orderAudioFiles(audio_files):
     for file in audio_files:
@@ -255,12 +263,12 @@ args = parser.parse_args()
 # Access the input arguments
 
 if args.directory:
-    audio_files = parseAudioDirectories(args.input, args.recursive) 
+    audio_files = parseAudioDirectories(args.input, args.recursive)
 else:
     audio_files = parseAudioFiles(args.input)
 
 if args.filter:
-    audio_files=filterAudioFiles(args.filter[0], args.filter[1], audio_files)
+    audio_files = filterAudioFiles(args.filter[0], args.filter[1], audio_files)
 
 if args.interactive:
     interactiveMode(audio_files)
