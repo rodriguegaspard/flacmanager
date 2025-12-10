@@ -22,6 +22,7 @@ def filterAudioFiles(tag, value, audio_files):
 
 def interactiveMode(audio_files):
     print("Welcome to the interactive mode of flacmanager. Type help for a list of commands, or exit/quit to leave.")
+    choice = ""
     while choice != "exit" and choice != "quit":
         choice = input("flacman> ")
         if choice == "help":
