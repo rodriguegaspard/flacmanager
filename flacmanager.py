@@ -34,6 +34,7 @@ flacmanager interacive mode commands
     list - Lists audio files.
     tweak - Iterates through audio files and prompts the user for tag modification.
     zeropadding - Adds a zero before every single digit, in order to sort the tracks by tracknumber correctly.
+    clean - Removes illegal characters such as slashes, questions marks and asterisks.
     exit or quit - Quits the interactive mode.
 ------------------------------------
 '''
@@ -47,7 +48,14 @@ flacmanager interacive mode commands
             value = input(" What is the new value? ")
             modifyMetadata(tag, value, audio_files)
         elif choice == "tweak":
-            tweakAudioFiles(audio_files)
+            tag = input(" What tag do you wish to modify? (album/artist/genre/tracknumber/title)? ")
+            if tag not in ["album", "artist", "genre", "tracknumber", "title"]:
+                print("ERROR, {} is not a valid tag.".format(tag))
+            else:
+                tweakAudioFiles(tag, audio_files)
+        elif choice == "clean":
+            cleanMetadata(audio_files)
+            printMetadata(audio_files)
 
 
 def zeroPadding(audio_files):
@@ -232,6 +240,26 @@ def removeLyrics(audio_files):
         if removed:
             file[0].save()
 
+
+def sanitizeTag(text: str) -> str:
+    if text is None:
+        return ""
+    text = re.sub(r"[\x00-\x1F\x7F]", "", text)
+    forbidden = r'[\/\\\*\?<>|"]'
+    text = re.sub(forbidden, "", text)
+    text = re.sub(r"\s+", " ", text).strip()
+    return text
+
+
+def cleanMetadata(audio_files):
+    tags = ["title", "artist", "genre", "album"]
+    for file in audio_files:
+        for tag in tags:
+            sanitized_tag = sanitizeTag(file[0].tags[tag][0])
+            file[0].tags[tag] = sanitized_tag
+            file[0].save()
+
+
 # Creating the parser
 parser = argparse.ArgumentParser(description='Manages metadata for multiple audio formats.')
 parser.add_argument("input", metavar="files", nargs="+", help='audio file(s)')
@@ -247,6 +275,7 @@ parser.add_argument("-f", "--filter", nargs=2, metavar=('TAG', 'VALUE'), help="F
 parser.add_argument("-o", "--order", action="store_true", help="Appends the tracknumber (if it exists) to the title tag value, useful for some devices.")
 parser.add_argument("-z", "--zeropadding", action="store_true", help="Automatic left zero-padding for single-digit tracknumbers, so that they're ordered properly.")
 parser.add_argument("-D", "--delete", action="store_true", help='Deletes cover art and lyrics from the audio files given as arguments.')
+parser.add_argument("-c", "--clean", action="store_true", help='Deletes forbidden characters, that might pose an issue on Linux systems.')
 args = parser.parse_args()
 
 # Access the input arguments
@@ -267,6 +296,9 @@ else:
 
     if args.zeropadding:
         zeroPadding(audio_files)
+
+    if args.clean:
+        cleanMetadata(audio_files)
 
     if args.rename:
         audio_files = renameAudioFiles(audio_files)
