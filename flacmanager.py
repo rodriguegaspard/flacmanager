@@ -43,10 +43,14 @@ flacmanager interacive mode commands
             printMetadata(audio_files)
         elif choice == "zeropadding":
             zeroPadding(audio_files)
+            printMetadata(audio_files)
         elif choice == "modify":
             tag = input(" What tag do you wish to modify? (album/artist/genre/tracknumber/title)? ")
-            value = input(" What is the new value? ")
-            modifyMetadata(tag, value, audio_files)
+            if tag not in ["album", "artist", "genre", "tracknumber", "title"]:
+                print("ERROR, {} is not a valid tag.".format(tag))
+            else:
+                value = input(" What is the new value? ")
+                modifyMetadata(tag, value, audio_files)
         elif choice == "tweak":
             tag = input(" What tag do you wish to modify? (album/artist/genre/tracknumber/title)? ")
             if tag not in ["album", "artist", "genre", "tracknumber", "title"]:
@@ -65,16 +69,15 @@ def zeroPadding(audio_files):
         if len(tracknumber) == 1 and tracknumber.isdigit():
             file[0].tags["tracknumber"] = "0" + tracknumber
             file[0].save()
-            counter+=1
+            counter += 1
     if counter == 0:
         print("No changes were made.")
 
 
-def tweakAudioFiles(audio_files):
-    tag = input(" What tag do you wish to modify (album/artist/genre/tracknumber/title)? ")
+def tweakAudioFiles(tag, audio_files):
     for file in audio_files:
-        old_value = "(Old value = " + file[0].tags[tag][0] + ")" if tag in file[0].tags else ""
-        value = input(" New value for the " + tag.upper() + " tag of '" + os.path.basename(file[1]) + "' ? " + old_value + " - /c to continue, q to exit/ ")
+        old_value = " (Old value = " + file[0].tags[tag][0] + ")" if tag in file[0].tags else ""
+        value = input("New value for the " + tag.upper() + " tag of '" + os.path.basename(file[1]) + "' ? " + old_value + " - /c to continue, q to exit/ ")
         if value == 'q':
             break
         elif value == 'c':
@@ -120,7 +123,7 @@ def modifyMetadata(tag, value, audio_files):
         choice = input(value + " will be the new value for the " + tag.upper() + " tag for " + str(len(audio_files)) + " files. Proceed? (Y/n) ")
         if choice == 'Y':
             for file in audio_files:
-                file[0].tags[tag.upper()] = value
+                file[0].tags[tag] = value
                 file[0].save()
 
 
@@ -211,7 +214,7 @@ def orderAudioFiles(audio_files):
     for file in audio_files:
         if "tracknumber" in file[0].tags and "title" in file[0].tags:
             new_title = file[0].tags["tracknumber"][0] + " - " + file[0].tags["title"][0]
-            file[0].tags["TITLE"] = new_title
+            file[0].tags["title"] = new_title
             file[0].save()
         else:
             print("Could not rename {} : missing tags.".format(os.path.basename(file[1])))
