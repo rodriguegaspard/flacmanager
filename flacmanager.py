@@ -45,8 +45,8 @@ flacmanager interacive mode commands
             zeroPadding(audio_files)
             printMetadata(audio_files)
         elif choice == "modify":
-            tag = input(" What tag do you wish to modify? (album/artist/genre/tracknumber/title)? ")
-            if tag not in ["album", "artist", "genre", "tracknumber", "title"]:
+            tag = input(" What tag do you wish to modify? (album/artist/genre)? ")
+            if tag not in ["album", "artist", "genre"]:
                 print("ERROR, {} is not a valid tag.".format(tag))
             else:
                 value = input(" What is the new value? ")
@@ -117,7 +117,7 @@ def addPicture(picture, audio_files):
 
 
 def modifyMetadata(tag, value, audio_files):
-    if tag not in ["album", "genre", "artist", "tracknumber", "title"]:
+    if tag not in ["album", "genre", "artist"]:
         print("ERROR: {} is not a valid tag. Please provide a valid metadata tag. See -l/--list for a list of all relevant metadata tags.".format(tag))
     else:
         choice = input(value + " will be the new value for the " + tag.upper() + " tag for " + str(len(audio_files)) + " files. Proceed? (Y/n) ")
@@ -255,7 +255,7 @@ def sanitizeTag(text: str) -> str:
 
 
 def cleanMetadata(audio_files):
-    tags = ["title", "artist", "genre", "album"]
+    tags = ["title", "artist", "album"]
     for file in audio_files:
         for tag in tags:
             sanitized_tag = sanitizeTag(file[0].tags[tag][0])
