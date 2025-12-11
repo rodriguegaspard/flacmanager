@@ -217,12 +217,12 @@ def getAlbum(file):
 def printMetadata(audio_files):
     table = Table(show_header=True, box=box.MINIMAL_HEAVY_HEAD)
     tags = ["album", "artist", "genre", "tracknumber", "title"]
-    table.add_column("Artist")
-    table.add_column("Album")
-    table.add_column("Genre")
-    table.add_column("#")
-    table.add_column("Title")
-    table.add_column("Filename")
+    table.add_column("Artist", no_wrap=True, min_width=10)
+    table.add_column("Album", no_wrap=True, min_width=10)
+    table.add_column("Genre", no_wrap=True, min_width=5)
+    table.add_column("#", no_wrap=True, min_width=3)
+    table.add_column("Title", no_wrap=True, min_width=10)
+    table.add_column("Filename", no_wrap=True, min_width=10)
     for file in audio_files:
         record = []
         for tag in tags:
