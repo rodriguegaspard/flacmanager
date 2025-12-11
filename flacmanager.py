@@ -9,6 +9,7 @@ from base64 import b64encode
 from rich import box
 from rich.console import Console
 from rich.table import Table
+from rich.prompt import Prompt, Confirm
 
 console = Console()
 
@@ -29,45 +30,58 @@ def filterAudioFiles(tag, value, audio_files):
             return filtered_audio_files
 
 
-def interactiveMode(audio_files):
-    console.print('Welcome to the interactive mode of flacmanager.'
-                  'Type help for a list of commands, or exit/quit to leave.')
-    choice = ""
-    while choice != "exit" and choice != "quit":
-        choice = console.input("flacman> ")
-        if choice == "help":
-            console.print(
-                    '''
+def interactiveHelp():
+    console.print('''
 flacmanager interacive mode commands
 ------------------------------------
     help - Prints this help.
     list - Lists audio files.
     tweak - Iterates through audio files and prompts for modification.
-    zeropadding - Prefixes tracknumbers with a zero if they are a single digit.
-    clean - Removes illegal characters.
-    exit or quit - Quits the interactive mode.
+    zero - Prefixes tracknumbers with a zero if they are a single digit.
+    clean - Removes wildcard characters.
+    exit - Quits the interactive mode.
 ------------------------------------
-''')
+                  ''')
+
+
+def interactiveMode(audio_files):
+    console.print("Welcome to the interactive mode.")
+    choice = ""
+    while choice != "exit":
+        choice = Prompt.ask("i> ",
+                            choices=["help",
+                                     "list",
+                                     "tweak",
+                                     "modify",
+                                     "zero",
+                                     "clean",
+                                     "exit"],
+                            default="help",
+                            show_choices=True)
+        if choice == "help":
+            interactiveHelp()
         elif choice == "list":
             printMetadata(audio_files)
-        elif choice == "zeropadding":
+        elif choice == "tweak":
+            tag = Prompt.ask("Choose a tag to tweak",
+                             choices=["artist",
+                                      "album",
+                                      "genre",
+                                      "tracknumber",
+                                      "title"],
+                             show_choices=True)
+            tweakAudioFiles(tag, audio_files)
+        elif choice == "modify":
+            tag = Prompt.ask("Choose a tag to modify",
+                             choices=["artist",
+                                      "album",
+                                      "genre"],
+                             show_choices=True)
+            value = Prompt.ask("New value?")
+            modifyMetadata(tag, value, audio_files)
+        elif choice == "zero":
             zeroPadding(audio_files)
             printMetadata(audio_files)
-        elif choice == "modify":
-            tag = console.input(' What tag do you wish to modify?'
-                                '(album/artist/genre)? ')
-            if tag not in ["album", "artist", "genre"]:
-                console.print("ERROR, {} is not a valid tag.".format(tag))
-            else:
-                value = console.input(" What is the new value? ")
-                modifyMetadata(tag, value, audio_files)
-        elif choice == "tweak":
-            tag = console.input(' What tag do you wish to modify?'
-                                '(album/artist/genre/tracknumber/title)? ')
-            if tag not in ["album", "artist", "genre", "tracknumber", "title"]:
-                console.print("ERROR, {} is not a valid tag.".format(tag))
-            else:
-                tweakAudioFiles(tag, audio_files)
         elif choice == "clean":
             cleanMetadata(audio_files)
             printMetadata(audio_files)
