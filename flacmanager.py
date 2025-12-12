@@ -17,7 +17,6 @@ from rich.prompt import Prompt, Confirm
 from prompt_toolkit import prompt
 from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.formatted_text import ANSI
-from prompt_toolkit.shortcuts import radiolist_dialog
 from prompt_toolkit.styles import Style
 
 console = Console()
@@ -423,10 +422,35 @@ def radioSelection(message, choices):
     return prompt(render, key_bindings=kb)
 
 
+def printSelectedAudioFiles(audio_files, target_tags, regex=r'', title=""):
+    table = Table(title=title, show_header=True, box=box.MINIMAL_HEAVY_HEAD)
+    if not target_tags:
+        target_tags = ["album", "artist", "genre", "tracknumber", "title"]
+    for tag in target_tags:
+        if tag == "tracknumber":
+            table.add_column("#", no_wrap=True, min_width=3)
+        else:
+            table.add_column(tag.capitalize(), no_wrap=True, min_width=10)
+    for file in audio_files:
+        record = []
+        match = False
+        for tag in target_tags:
+            if tag in file[0].tags:
+                if re.match(regex, file[0].tags[tag][0]):
+                    match = True
+                record.append(file[0].tags[tag][0])
+        if record and match:
+            table.add_row(*record)
+
+    console.print(table)
+
+
 def modify(tag, value, audio_files):
-    tags = ["artist", "album", "genre", "tracknumber", "title"]
-    console.print(radioSelection("\x1b[1;4;37mPick a tag\x1b[0m", tags))
-    console.print(listSelection("\x1b[1;4;37mPick a tag\x1b[0m", tags))
+    # tags = ["artist", "album", "genre", "tracknumber", "title"]
+    # console.print(radioSelection("\x1b[1;4;37mPick a tag\x1b[0m", tags))
+    # console.print(listSelection("\x1b[1;4;37mPick a tag\x1b[0m", tags))
+    printSelectedAudioFiles(audio_files, ["title", "genre"], r'0', "BEFORE")
+    printSelectedAudioFiles(audio_files, ["artist", "title"], r'11', "AFTER")
 
 
 parser = argparse.ArgumentParser(
