@@ -22,20 +22,34 @@ from prompt_toolkit.styles import Style
 console = Console()
 
 
-def filterAudioFiles(tag, value, audio_files):
-    if tag not in ["album", "artist", "genre", "tracknumber", "title"]:
-        console.print('ERROR: Invalid tag.'
-                      'Possible values are album, artist, genre,'
-                      'tracknumber and title.')
+def filterAudioFiles(audio_files,
+                     regex=r'',
+                     target_tags=["artist",
+                                  "album",
+                                  "genre",
+                                  "tracknumber",
+                                  "title"]):
+    if not target_tags:
+        target_tags = radioSelection("Select tags you wish to filter on",
+                                     ["artist",
+                                      "album",
+                                      "genre",
+                                      "tracknumber",
+                                      "title"])
+    result = []
+    for file in audio_files:
+        match = False
+        for tag in target_tags:
+            if tag in file[0].tags:
+                if re.match(regex, file[0].tags[tag][0]):
+                    match = True
+        if match:
+            result.append(file)
+    if len(result) < 1:
+        console.print('Filter returned an empty argument list.')
+        return audio_files
     else:
-        filtered_audio_files = [file for file in audio_files
-                                if re.match(value, file[0].tags[tag][0])]
-        if len(audio_files) < 1:
-            console.print('Filter returned an empty argument list.'
-                          'Defaulting to whole argument list.')
-            return audio_files
-        else:
-            return filtered_audio_files
+        return result
 
 
 def interactiveHelp():
@@ -528,7 +542,9 @@ else:
     audio_files = parseAudioFiles(args.input)
 
 if args.filter:
-    audio_files = filterAudioFiles(args.filter[0], args.filter[1], audio_files)
+    audio_files = filterAudioFiles(audio_files,
+                                   re.compile(args.filter[0]),
+                                   [args.filter[1]])
 
 if args.interactive:
     interactiveMode(audio_files)
