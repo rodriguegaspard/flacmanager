@@ -341,6 +341,40 @@ def cleanMetadata(audio_files):
             file[0].save()
 
 
+def listSelection(message, choices):
+    cursor = {"index": 0}
+    kb = KeyBindings()
+
+    @kb.add('up')
+    def _(event):
+        cursor["index"] = (cursor["index"] - 1) % len(choices)
+
+    @kb.add('down')
+    def _(event):
+        cursor["index"] = (cursor["index"] + 1) % len(choices)
+
+    @kb.add('enter')
+    def _(event):
+        event.app.exit(result=choices[cursor["index"]])
+
+    style = Style.from_dict({
+        "selected": "reverse",
+    })
+
+    def get_prompt():
+        lines = [f"{message}"
+                 "\x1b[3;90m [↑↓, Space: toggle, Enter: confirm] \x1b[0m", ""]
+        for i, c in enumerate(choices):
+            if i == cursor["index"]:
+                pointer = "\x1b[1;36m>\x1b[0m"
+                lines.append(f"{pointer} \x1b[7;36m{c}\x1b[0m")
+            else:
+                lines.append(f"  {c}")
+        return ANSI("\n".join(lines) + "\n")
+
+    return prompt(get_prompt, key_bindings=kb, style=style)
+
+
 def radioSelection(message, choices):
     if len(choices) == 0:
         return []
@@ -392,6 +426,7 @@ def radioSelection(message, choices):
 def modify(tag, value, audio_files):
     tags = ["artist", "album", "genre", "tracknumber", "title"]
     console.print(radioSelection("\x1b[1;4;37mPick a tag\x1b[0m", tags))
+    console.print(listSelection("\x1b[1;4;37mPick a tag\x1b[0m", tags))
 
 
 parser = argparse.ArgumentParser(
