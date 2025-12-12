@@ -464,12 +464,11 @@ def applyRegex(audio_files,
         for tag in target_tags:
             if tag in file[0].tags:
                 if re.search(regex, file[0].tags[tag][0]):
-                    result = re.sub(regex,
-                                    replace,
-                                    file[0].tags[tag][0])
-                    file[0].tags[tag] = [result]
-                    if not dry_run:
-                        file[0].save()
+                    old_value = file[0].tags[tag][0]
+                    new_value = re.sub(regex, replace, old_value)
+                    file[0].tags[tag] = new_value
+                if not dry_run:
+                    file[0].save()
     return audio_files
 
 
