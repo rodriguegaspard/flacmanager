@@ -41,13 +41,13 @@ def filterAudioFiles(audio_files,
         match = False
         for tag in target_tags:
             if tag in file[0].tags:
-                if re.match(regex, file[0].tags[tag][0]):
+                if re.search(regex, file[0].tags[tag][0]):
                     match = True
         if match:
             result.append(file)
     if len(result) < 1:
-        console.print('Filter returned an empty argument list.')
-        return audio_files
+        console.print('[bold red]Filter returned an empty argument list.[/]')
+        return None
     else:
         return result
 
