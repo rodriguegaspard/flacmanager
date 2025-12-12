@@ -429,6 +429,8 @@ def printSelectedAudioFiles(audio_files,
                                          "title"],
                             title=""):
     table = Table(title=title, show_header=True, box=box.MINIMAL_HEAVY_HEAD)
+    if audio_files is None or len(audio_files) < 1:
+        return
     for tag in target_tags:
         if tag == "tracknumber":
             table.add_column("#", no_wrap=True, min_width=2, max_width=3)
@@ -585,7 +587,7 @@ else:
 if args.filter:
     audio_files = filterAudioFiles(audio_files,
                                    re.compile(args.filter[0]),
-                                   [args.filter[1]])
+                                   args.filter[1].split(";"))
 
 if args.interactive:
     interactiveMode(audio_files)
