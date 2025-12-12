@@ -4,12 +4,21 @@ import argparse
 import sys
 import re
 import glob
+
 from mutagen._util import MutagenError
+
 from base64 import b64encode
+
 from rich import box
 from rich.console import Console
 from rich.table import Table
 from rich.prompt import Prompt, Confirm
+
+from prompt_toolkit import prompt
+from prompt_toolkit.key_binding import KeyBindings
+from prompt_toolkit.formatted_text import ANSI
+from prompt_toolkit.shortcuts import radiolist_dialog
+from prompt_toolkit.styles import Style
 
 console = Console()
 
@@ -333,7 +342,59 @@ def cleanMetadata(audio_files):
             file[0].save()
 
 
-# Creating the parser
+def radioSelection(message, choices):
+    if len(choices) == 0:
+        return []
+    if len(choices) == 1:
+        return choices[0]
+
+    cursor = {"index": 0}
+    selected = set()
+    kb = KeyBindings()
+
+    @kb.add("up")
+    def _(event):
+        cursor["index"] = (cursor["index"] - 1) % len(choices)
+
+    @kb.add("down")
+    def _(event):
+        cursor["index"] = (cursor["index"] + 1) % len(choices)
+
+    @kb.add(" ")
+    def _(event):
+        item = choices[cursor["index"]]
+        if item in selected:
+            selected.remove(item)
+        else:
+            selected.add(item)
+
+    @kb.add("enter")
+    def _(event):
+        event.app.exit(result=list(selected))
+
+    def render():
+        lines = [f"\n{message}"
+                 "\x1b[3;90m [↑↓, Space: toggle, Enter: confirm] \x1b[0m", ""]
+        for i, choice in enumerate(choices):
+            mark = "[\x1b[1;36m*\x1b[0m]" if choice in selected else "[ ]"
+            pointer = ">" if i == cursor["index"] else " "
+            if i == cursor["index"]:
+                pointer = f"\x1b[1;36m{pointer}\x1b[0m"
+            if choice in selected:
+                choice_text = f"\x1b[3;96m{choice}\x1b[0m"
+            else:
+                choice_text = choice
+            lines.append(f"{pointer} {mark} {choice_text}")
+        return ANSI("\n".join(lines) + "\n")
+
+    return prompt(render, key_bindings=kb)
+
+
+def modify(tag, value, audio_files):
+    tags = ["artist", "album", "genre", "tracknumber", "title"]
+    console.print(radioSelection("\x1b[1;4;37mPick a tag\x1b[0m", tags))
+
+
 parser = argparse.ArgumentParser(
         description='Manages metadata for multiple audio formats.')
 parser.add_argument("input",
@@ -421,7 +482,7 @@ else:
         zeroPadding(audio_files)
 
     if args.clean:
-        cleanMetadata(audio_files)
+        modify("", "", audio_files)
 
     if args.rename:
         audio_files = renameAudioFiles(audio_files)
