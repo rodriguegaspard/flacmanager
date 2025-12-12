@@ -109,21 +109,20 @@ def zeroPadding(audio_files):
 def tweakAudioFiles(tag, audio_files):
     for file in audio_files:
         if tag in file[0].tags:
-            old_value = " (Old value = " + file[0].tags[tag][0] + ")"
+            old_value = file[0].tags[tag][0]
         else:
             old_value = ""
-        value = console.input("New value for the "
-                              + tag.upper()
-                              + " tag of '"
-                              + os.path.basename(file[1])
-                              + "' ? " + old_value
-                              + " - /c to continue, q to exit/ ")
-        if value == 'q':
+        choice = Prompt.ask('[dim italic](c: continue, '
+                            'q: quit)[/] '
+                            '[{}] -> [?] '
+                            .format(old_value),
+                            default=old_value)
+        if choice == 'q':
             break
-        elif value == 'c':
+        elif choice == 'c':
             continue
         else:
-            file[0].tags[tag] = value
+            file[0].tags[tag] = choice
             file[0].save()
 
 
