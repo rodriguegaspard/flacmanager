@@ -54,7 +54,6 @@ def filterAudioFiles(audio_files,
 
 def interactiveHelp():
     console.print('''
-flacmanager interacive mode commands
 ------------------------------------
     help - Prints this help.
     list - Lists audio files.
