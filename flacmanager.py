@@ -81,10 +81,8 @@ def interactiveMode(audio_files):
             modifyMetadata(tag, value, audio_files)
         elif choice == "zero":
             zeroPadding(audio_files)
-            printMetadata(audio_files)
         elif choice == "clean":
             cleanMetadata(audio_files)
-            printMetadata(audio_files)
 
 
 def zeroPadding(audio_files):
