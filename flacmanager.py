@@ -126,17 +126,14 @@ def addPicture(picture, audio_files):
         coverArt = mutagen.flac.Picture()
         with open(picture, "rb") as image_data:
             coverArt.data = image_data.read()
-
         coverArt.type = mutagen.id3.PictureType.COVER_FRONT
         coverArt.mime = u"image/jpeg"
         coverArt.width = 500
         coverArt.height = 500
         coverArt.depth = 16
-
-        choice = console.input(picture + " will be the new cover art for "
-                               + str(len(audio_files))
-                               + " files. Proceed? (Y/n) ")
-        if choice == 'Y':
+        choice = Confirm.ask('{} will be the cover art for {} files. Proceed?'
+                             .format(picture, len(audio_files)))
+        if choice:
             for file in audio_files:
                 if type(file) is mutagen.flac.FLAC:
                     file[0].clear_pictures()
@@ -151,15 +148,15 @@ def modifyMetadata(tag, value, audio_files):
     if tag not in ["album", "genre", "artist"]:
         console.print('ERROR: {} is not a valid tag.'.format(tag))
     else:
-        choice = console.input(value + " will be the new value for the "
-                               + tag.upper()
-                               + " tag for "
-                               + str(len(audio_files))
-                               + " files. Proceed? (Y/n) ")
-        if choice == 'Y':
+        choice = Confirm.ask('{} will be the new value for the '
+                             '{} tag for {} files. Proceed?'
+                             .format(value, tag, len(audio_files)))
+        if choice:
             for file in audio_files:
                 file[0].tags[tag] = value
                 file[0].save()
+        else:
+            console.print("No changes have been applied.")
 
 
 def sortAudioFiles(audio_files, path=""):
@@ -293,10 +290,10 @@ def orderAudioFiles(audio_files):
 
 
 def deleteCoverArtAndLyrics(audio_files):
-    console.print('WARNING : This will remove ALL cover art and lyrics tags'
-                  'from the selected files, do you wish to proceed? Y/N ')
-    choice = console.input()
-    if choice == "Y":
+    choice = Confirm.ask('This will remove ALL cover art and lyrics '
+                         'from {} files. Proceed?'
+                         .format(len(audio_files)))
+    if choice:
         for file in audio_files:
             file[0].clear_pictures()
             file[0].save()
