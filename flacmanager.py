@@ -463,9 +463,10 @@ def applyRegex(audio_files,
         for tag in target_tags:
             if tag in file[0].tags:
                 if re.search(regex, file[0].tags[tag][0]):
-                    file[0].tags[tag] = re.sub(regex,
-                                               replace,
-                                               file[0].tags[tag][0])
+                    result = re.sub(regex,
+                                    replace,
+                                    file[0].tags[tag][0])
+                    file[0].tags[tag] = [result]
                     if not dry_run:
                         file[0].save()
     return audio_files
@@ -493,17 +494,18 @@ def modifyMetadata(audio_files,
         console.print("<{}> -> <{}>"
                       .format(regex.pattern, replace),
                       highlight=False)
-        result = applyRegex(filter_result,
-                            regex,
-                            target_tags,
-                            replace)
-        printSelectedAudioFiles(result, target_tags)
+        preview = applyRegex(filter_result,
+                             regex,
+                             target_tags,
+                             replace)
+        printSelectedAudioFiles(preview, target_tags)
         choice = Confirm.ask("Proceed?")
         if choice:
-            result = applyRegex(filter_result,
-                                regex,
-                                target_tags,
-                                replace)
+            applyRegex(filter_result,
+                       regex,
+                       target_tags,
+                       replace,
+                       False)
 
 
 parser = argparse.ArgumentParser(
@@ -604,7 +606,9 @@ else:
         orderAudioFiles(audio_files)
 
     if args.modify:
-        modifyMetadata(audio_files)
+        modifyMetadata(audio_files,
+                       re.compile(args.modify[0]),
+                       args.modify[1].split(";"))
 
     if args.picture:
         addPicture(args.picture[0], audio_files)
