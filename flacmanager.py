@@ -421,24 +421,30 @@ def radioSelection(message, choices):
     return prompt(render, key_bindings=kb)
 
 
-def printSelectedAudioFiles(audio_files, target_tags, regex=r'', title=""):
+def printSelectedAudioFiles(audio_files,
+                            target_tags=["album",
+                                         "artist",
+                                         "genre",
+                                         "tracknumber",
+                                         "title"],
+                            title=""):
     table = Table(title=title, show_header=True, box=box.MINIMAL_HEAVY_HEAD)
-    if not target_tags:
-        target_tags = ["album", "artist", "genre", "tracknumber", "title"]
     for tag in target_tags:
         if tag == "tracknumber":
-            table.add_column("#", no_wrap=True, min_width=3)
+            table.add_column("#", no_wrap=True, min_width=2, max_width=3)
         else:
-            table.add_column(tag.capitalize(), no_wrap=True, min_width=10)
+            table.add_column(tag.capitalize(),
+                             no_wrap=True,
+                             min_width=8,
+                             max_width=40)
     for file in audio_files:
         record = []
-        match = False
         for tag in target_tags:
             if tag in file[0].tags:
-                if re.match(regex, file[0].tags[tag][0]):
-                    match = True
                 record.append(file[0].tags[tag][0])
-        if record and match:
+            else:
+                record.append("N/A")
+        if record:
             table.add_row(*record)
 
     console.print(table)
