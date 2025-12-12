@@ -100,7 +100,7 @@ def interactiveMode(audio_files):
                                       "genre"],
                              show_choices=True)
             value = Prompt.ask("New value?")
-            modifyMetadata(tag, value, audio_files)
+            # modifyMetadata(tag, value, audio_files)
         elif choice == "zero":
             zeroPadding(audio_files)
         elif choice == "clean":
@@ -163,21 +163,6 @@ def addPicture(picture, audio_files):
                     b64 = b64encode(coverArt.write())
                     file[0]['metadata_block_picture'] = b64.decode('ascii')
                 file[0].save()
-
-
-def modifyMetadata(tag, value, audio_files):
-    if tag not in ["album", "genre", "artist"]:
-        console.print('ERROR: {} is not a valid tag.'.format(tag))
-    else:
-        choice = Confirm.ask('{} will be the new value for the '
-                             '{} tag for {} files. Proceed?'
-                             .format(value, tag, len(audio_files)))
-        if choice:
-            for file in audio_files:
-                file[0].tags[tag] = value
-                file[0].save()
-        else:
-            console.print("No changes have been applied.")
 
 
 def sortAudioFiles(audio_files, path=""):
@@ -459,12 +444,60 @@ def printSelectedAudioFiles(audio_files, target_tags, regex=r'', title=""):
     console.print(table)
 
 
-def modify(tag, value, audio_files):
-    # tags = ["artist", "album", "genre", "tracknumber", "title"]
-    # console.print(radioSelection("\x1b[1;4;37mPick a tag\x1b[0m", tags))
-    # console.print(listSelection("\x1b[1;4;37mPick a tag\x1b[0m", tags))
-    printSelectedAudioFiles(audio_files, ["title", "genre"], r'0', "BEFORE")
-    printSelectedAudioFiles(audio_files, ["artist", "title"], r'11', "AFTER")
+def applyRegex(audio_files,
+               regex,
+               target_tags=["artist",
+                            "album",
+                            "genre",
+                            "tracknumber",
+                            "title"],
+               replace="",
+               dry_run=True):
+    for file in audio_files:
+        for tag in target_tags:
+            if tag in file[0].tags:
+                if re.search(regex, file[0].tags[tag][0]):
+                    file[0].tags[tag] = re.sub(regex,
+                                               replace,
+                                               file[0].tags[tag][0])
+                    if not dry_run:
+                        file[0].save()
+    return audio_files
+
+
+def modifyMetadata(audio_files,
+                   regex="",
+                   target_tags=["artist",
+                                "album",
+                                "genre",
+                                "tracknumber",
+                                "title"],
+                   replace=None,
+                   dry_run=True):
+    if not regex:
+        prompt = Prompt.ask("Regex pattern")
+        regex = re.compile(prompt)
+    if replace is None:
+        prompt = Prompt.ask("Replace by")
+        replace = prompt
+    filter_result = filterAudioFiles(audio_files, regex, target_tags)
+    if filter_result is not None:
+        printSelectedAudioFiles(filter_result,
+                                target_tags)
+        console.print("<{}> -> <{}>"
+                      .format(regex.pattern, replace),
+                      highlight=False)
+        result = applyRegex(filter_result,
+                            regex,
+                            target_tags,
+                            replace)
+        printSelectedAudioFiles(result, target_tags)
+        choice = Confirm.ask("Proceed?")
+        if choice:
+            result = applyRegex(filter_result,
+                                regex,
+                                target_tags,
+                                replace)
 
 
 parser = argparse.ArgumentParser(
@@ -553,10 +586,10 @@ else:
         deleteCoverArtAndLyrics(audio_files)
 
     if args.zeropadding:
-        zeroPadding(audio_files)
+        console.print("TBA")
 
     if args.clean:
-        modify("", "", audio_files)
+        console.print("TBA")
 
     if args.rename:
         audio_files = renameAudioFiles(audio_files)
@@ -565,7 +598,7 @@ else:
         orderAudioFiles(audio_files)
 
     if args.modify:
-        modifyMetadata(args.modify[0], args.modify[1], audio_files)
+        modifyMetadata(audio_files)
 
     if args.picture:
         addPicture(args.picture[0], audio_files)
@@ -577,4 +610,4 @@ else:
             audio_files = sortAudioFiles(audio_files)
 
     if args.list:
-        printMetadata(audio_files)
+        printSelectedAudioFiles(audio_files)
