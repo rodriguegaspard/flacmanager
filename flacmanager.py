@@ -432,14 +432,14 @@ else:
     if args.modify:
         modifyMetadata(args.modify[0], args.modify[1], audio_files)
 
+    if args.picture:
+        addPicture(args.picture[0], audio_files)
+
     if args.sort:
         if os.path.isdir(args.sort):
             audio_files = sortAudioFiles(audio_files, args.sort)
         else:
             audio_files = sortAudioFiles(audio_files)
-
-    if args.picture:
-        addPicture(args.picture[0], audio_files)
 
     if args.list:
         printMetadata(audio_files)
