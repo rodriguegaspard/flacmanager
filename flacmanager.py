@@ -604,8 +604,8 @@ parser.add_argument("-s",
 parser.add_argument("-m",
                     "--modify",
                     nargs=2,
-                    metavar=('TAG', 'VALUE'),
-                    help='Modifies TAG value to VALUE.')
+                    metavar=('PATTERN', 'TAGS'),
+                    help='Replaces values in TAGS matched by PATTERN')
 parser.add_argument("-p",
                     "--picture",
                     nargs=1,
