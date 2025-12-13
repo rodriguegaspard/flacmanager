@@ -208,10 +208,6 @@ def renameAudioFiles(audio_files):
     return new_audio_files
 
 
-def getAlbum(file):
-    return file[0].tags["album"][0] if "album" in file[0].tags else "N/A"
-
-
 def printMetadata(audio_files):
     table = Table(show_header=True, box=box.MINIMAL_HEAVY_HEAD)
     tags = ["album", "artist", "genre", "tracknumber", "title"]
