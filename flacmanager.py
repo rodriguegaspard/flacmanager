@@ -154,14 +154,16 @@ def addPicture(picture, audio_files):
         choice = Confirm.ask('{} will be the cover art for {} files. Proceed?'
                              .format(picture, len(audio_files)))
         if choice:
-            for file in audio_files:
-                if type(file) is mutagen.flac.FLAC:
-                    file[0].clear_pictures()
-                    file[0].add_picture(coverArt)
-                else:
-                    b64 = b64encode(coverArt.write())
-                    file[0]['metadata_block_picture'] = b64.decode('ascii')
-                file[0].save()
+            with console.status("Adding cover art..",
+                                spinner="line"):
+                for file in audio_files:
+                    if type(file) is mutagen.flac.FLAC:
+                        file[0].clear_pictures()
+                        file[0].add_picture(coverArt)
+                    else:
+                        b64 = b64encode(coverArt.write())
+                        file[0]['metadata_block_picture'] = b64.decode('ascii')
+                    file[0].save()
 
 
 def sortAudioFiles(audio_files, path=""):
@@ -299,10 +301,12 @@ def deleteCoverArtAndLyrics(audio_files):
                          'from {} files. Proceed?'
                          .format(len(audio_files)))
     if choice:
-        for file in audio_files:
-            file[0].clear_pictures()
-            file[0].save()
-            removeLyrics(audio_files)
+        with console.status("Deleting cover art and lyrics..",
+                            spinner="line"):
+            for file in audio_files:
+                file[0].clear_pictures()
+                file[0].save()
+                removeLyrics(audio_files)
     else:
         console.print("No modifications have been made.")
 
