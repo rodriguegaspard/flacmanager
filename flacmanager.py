@@ -278,9 +278,9 @@ def parseAudioDirectories(arguments, is_recursive=False):
 def orderAudioFiles(audio_files):
     for file in audio_files:
         if "tracknumber" in file[0].tags and "title" in file[0].tags:
-            new_title = file[0].tags["tracknumber"][0]
-            + " - "
-            + file[0].tags["title"][0]
+            new_title = "{} - {}".format(
+                    file[0].tags["tracknumber"][0],
+                    file[0].tags["title"][0])
             file[0].tags["title"] = new_title
             file[0].save()
         else:
