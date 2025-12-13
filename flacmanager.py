@@ -473,7 +473,7 @@ def applyRegex(audio_files,
 
 
 def modifyMetadata(audio_files,
-                   regex="",
+                   regex=None,
                    target_tags=["artist",
                                 "album",
                                 "genre",
@@ -481,8 +481,8 @@ def modifyMetadata(audio_files,
                                 "title"],
                    replace=None,
                    dry_run=True):
-    if not regex:
-        prompt = Prompt.ask("Regex pattern")
+    if regex is None:
+        prompt = Prompt.ask("Pattern")
         regex = re.compile(prompt)
     if replace is None:
         prompt = Prompt.ask("Replace by")
