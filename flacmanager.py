@@ -58,8 +58,11 @@ def interactiveHelp():
     help - Prints this help.
     list - Lists audio files.
     tweak - Iterates through audio files and prompts for modification.
-    zero - Prefixes tracknumbers with a zero if they are a single digit.
-    clean - Removes wildcard characters.
+    modify - Bulk-modifies tags.
+    preset - Apply formatting presets.
+    order - Prefixes title with tracknumber.
+    rename - Renames files to '{tracknumber} - {title}'.
+    select - Manual selection of files.
     exit - Quits the interactive mode.
 ------------------------------------
                   ''')
@@ -74,8 +77,10 @@ def interactiveMode(audio_files):
                                      "list",
                                      "tweak",
                                      "modify",
-                                     "zero",
-                                     "clean",
+                                     "preset",
+                                     "order",
+                                     "select",
+                                     "rename",
                                      "exit"],
                             default="help",
                             show_choices=True)
@@ -99,23 +104,14 @@ def interactiveMode(audio_files):
                                       "genre"],
                              show_choices=True)
             value = Prompt.ask("New value?")
-            # modifyMetadata(tag, value, audio_files)
-        elif choice == "zero":
-            zeroPadding(audio_files)
-        elif choice == "clean":
-            cleanMetadata(audio_files)
-
-
-def zeroPadding(audio_files):
-    counter = 0
-    for file in audio_files:
-        tracknumber = file[0].tags["tracknumber"][0]
-        if len(tracknumber) == 1 and tracknumber.isdigit():
-            file[0].tags["tracknumber"] = "0" + tracknumber
-            file[0].save()
-            counter += 1
-    if counter == 0:
-        console.print("No changes were made.")
+            modifyMetadata(audio_files)
+        elif choice == "preset":
+            applyPresets(audio_files)
+        elif choice == "order":
+            orderAudioFiles(audio_files)
+        elif choice == "select":
+            filtered = selectAudioFiles(audio_files)
+            audio_files = filtered
 
 
 def tweakAudioFiles(tag, audio_files):
@@ -320,25 +316,6 @@ def removeLyrics(audio_files):
                 del file[0].tags[key[0]]
                 removed = True
         if removed:
-            file[0].save()
-
-
-def sanitizeTag(text: str) -> str:
-    if text is None:
-        return ""
-    text = re.sub(r"[\x00-\x1F\x7F]", "", text)
-    forbidden = r'[\/\\\*\?<>|"]'
-    text = re.sub(forbidden, "", text)
-    text = re.sub(r"\s+", " ", text).strip()
-    return text
-
-
-def cleanMetadata(audio_files):
-    tags = ["title", "artist", "album"]
-    for file in audio_files:
-        for tag in tags:
-            sanitized_tag = sanitizeTag(file[0].tags[tag][0])
-            file[0].tags[tag] = sanitized_tag
             file[0].save()
 
 
@@ -574,6 +551,29 @@ def applyPresets(audio_files, presets=None):
                             "title"],
                            r'0\1',
                            False)
+
+
+def selectAudioFiles(audio_files):
+    selection = []
+    choices = list(
+            map(
+                lambda x:
+                x[0].tags["album"][0] + " by "
+                + x[0].tags["artist"][0] + " ||| "
+                + x[0].tags["title"][0],
+                audio_files
+                ))
+    selection = radioSelection("Please select one, or many, audio files",
+                               choices)
+    titles = list(
+            map(
+                lambda s:
+                re.sub(r'^.*?\s*\|\|\|\s*', '', s),
+                selection
+                )
+            )
+    filtered = [x for x in audio_files if x[0].tags["title"][0] in titles]
+    return filtered
 
 
 parser = argparse.ArgumentParser(
