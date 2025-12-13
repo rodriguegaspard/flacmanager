@@ -508,6 +508,70 @@ def modifyMetadata(audio_files,
                        False)
 
 
+def applyPresets(audio_files, presets=None):
+    choices = ['A',
+               'C',
+               'P',
+               'W',
+               'Z']
+    console.print('''
+------------------------------------
+    A - Only keep the first artist.
+    C - Capitalizes every word in the title tag.
+    P - Removes everything under parentheses.
+    W - Removes wildcards characters.
+    Z - Zeropadding of every single-digit tracknumber.
+------------------------------------
+                  ''')
+    if presets is None:
+        presets = radioSelection("Select a formatting preset",
+                                 choices)
+    for preset in presets:
+        if preset == 'A':
+            modifyMetadata(audio_files,
+                           re.compile(r'([^,;]+)[,;].*'),
+                           ["artist"],
+                           r'\1',
+                           False)
+        elif preset == 'C':
+            modifyMetadata(audio_files,
+                           re.compile(r'\b\w+\b'),
+                           ["album",
+                            "artist",
+                            "genre",
+                            "title"],
+                           lambda m: m.group(0)
+                           if m.group(0) == m.group(0).title()
+                           else m.group(0).title(),
+                           False)
+        elif preset == 'P':
+            modifyMetadata(audio_files,
+                           re.compile(r'\s*\([^()]*\)\s*'),
+                           ["artist",
+                            "album",
+                            "genre",
+                            "title"],
+                           '',
+                           False)
+        elif preset == 'W':
+            modifyMetadata(audio_files,
+                           re.compile(r'[\/\0\*\?\[\]\{\}~!$&;|<>"\'`\\]'),
+                           ["artist",
+                            "album",
+                            "genre",
+                            "tracknumber",
+                            "title"],
+                           '',
+                           False)
+        elif preset == 'Z':
+            modifyMetadata(audio_files,
+                           re.compile(r'\b(\d)\b'),
+                           ["tracknumber",
+                            "title"],
+                           r'0\1',
+                           False)
+
+
 parser = argparse.ArgumentParser(
         description='Manages metadata for multiple audio formats.')
 parser.add_argument("input",
@@ -561,21 +625,16 @@ parser.add_argument("-o",
                     "--order",
                     action="store_true",
                     help="Appends tracknumber to title.")
-parser.add_argument("-z",
-                    "--zeropadding",
-                    action="store_true",
-                    help="Automatic left zero-padding for tracknumber.")
 parser.add_argument("-D",
                     "--delete",
                     action="store_true",
                     help='Deletes cover art and lyrics from the audio files.')
-parser.add_argument("-c",
-                    "--clean",
+parser.add_argument("-F",
+                    "--format",
                     action="store_true",
-                    help='Deletes wildcards characters from tags.')
+                    help='Apply one, or several formatting presets.')
 args = parser.parse_args()
 
-# Access the input arguments
 
 if args.directory:
     audio_files = parseAudioDirectories(args.input, args.recursive)
@@ -593,12 +652,6 @@ else:
     if args.delete:
         deleteCoverArtAndLyrics(audio_files)
 
-    if args.zeropadding:
-        console.print("TBA")
-
-    if args.clean:
-        console.print("TBA")
-
     if args.rename:
         audio_files = renameAudioFiles(audio_files)
 
@@ -608,7 +661,11 @@ else:
     if args.modify:
         modifyMetadata(audio_files,
                        re.compile(args.modify[0]),
-                       args.modify[1].split(";"))
+                       args.modify[1].split(";"),
+                       None,
+                       False)
+    if args.format:
+        applyPresets(audio_files, None)
 
     if args.picture:
         addPicture(args.picture[0], audio_files)
