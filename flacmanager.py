@@ -3,7 +3,6 @@ import mutagen
 import argparse
 import sys
 import re
-import glob
 
 from mutagen._util import MutagenError
 
@@ -50,9 +49,7 @@ def filterAudioFiles(audio_files,
             result.append((audio, path))
     if len(result) < 1:
         console.print('[bold red]Filter returned an empty argument list.[/]')
-        return None
-    else:
-        return audio_files
+    return result
 
 
 def interactiveHelp():
@@ -463,7 +460,7 @@ def modifyMetadata(audio_files,
     if regex is None:
         regex = re.compile(Prompt.ask("Pattern"))
     filter_result = filterAudioFiles(audio_files, regex, target_tags)
-    if filter_result is not None:
+    if len(filter_result) > 0:
         printMetadata(filter_result, regex, target_tags, "bold green")
     else:
         return
