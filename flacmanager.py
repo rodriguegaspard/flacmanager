@@ -99,13 +99,7 @@ def interactiveMode(audio_files):
                              show_choices=True)
             tweakAudioFiles(tag, audio_files)
         elif choice == "modify":
-            tag = Prompt.ask("Choose a tag to modify",
-                             choices=["artist",
-                                      "album",
-                                      "genre"],
-                             show_choices=True)
-            value = Prompt.ask("New value?")
-            modifyMetadata(audio_files)
+            modifyMetadata(audio_files, False, [])
         elif choice == "preset":
             applyPresets(audio_files)
         elif choice == "order":
@@ -415,92 +409,140 @@ def radioSelection(message, choices):
     return prompt(render, key_bindings=kb)
 
 
-def printSelectedAudioFiles(audio_files,
-                            target_tags=["album",
-                                         "artist",
-                                         "genre",
-                                         "tracknumber",
-                                         "title"],
-                            title=""):
-    table = Table(title=title, show_header=True, box=box.MINIMAL_HEAVY_HEAD)
-    if audio_files is None or len(audio_files) < 1:
-        return
-    for tag in target_tags:
-        if tag == "tracknumber":
-            table.add_column("#", no_wrap=True, min_width=2, max_width=3)
-        else:
-            table.add_column(tag.capitalize(),
-                             no_wrap=True,
-                             min_width=8,
-                             max_width=40)
-    for file in audio_files:
-        record = []
-        for tag in target_tags:
-            if tag in file[0].tags:
-                record.append(file[0].tags[tag][0])
-            else:
-                record.append("N/A")
-        if record:
-            table.add_row(*record)
-
-    console.print(table)
-
-
 def applyRegex(audio_files,
                regex,
-               target_tags=["artist",
+               target_tags=("artist",
                             "album",
                             "genre",
                             "tracknumber",
-                            "title"],
+                            "title"),
                replace="",
                dry_run=True):
-    for file in audio_files:
-        for tag in target_tags:
-            if tag in file[0].tags:
-                if re.search(regex, file[0].tags[tag][0]):
-                    old_value = file[0].tags[tag][0]
+    """
+    Apply regex replacement to mutagen.File tags.
+
+    Parameters:
+        audio_files: list of (mutagen.File, str)
+        regex: compiled regex pattern
+        target_tags: tags to modify
+        replace: replacement string
+        dry_run: if True, don't mutate original files
+
+    Returns:
+        If dry_run=True:
+            List of dicts with preview changes for printing
+        If dry_run=False:
+            List of (mutagen.File, str) with applied changes
+    """
+
+    if dry_run:
+        preview = []
+
+        for audio, path in audio_files:
+            file_preview = {"path": path, "changes": {}}
+
+            for tag in target_tags:
+                if tag not in audio.tags:
+                    continue
+                old_value = audio.tags[tag][0]
+                if re.search(regex, old_value):
                     new_value = re.sub(regex, replace, old_value)
-                    file[0].tags[tag] = new_value
-                if not dry_run:
-                    file[0].save()
-    return audio_files
+                    file_preview["changes"][tag] = {"old": old_value, "new": new_value}
+
+            if file_preview["changes"]:
+                preview.append(file_preview)
+
+        return preview
+
+    else:
+        result = []
+
+        for audio, path in audio_files:
+            changed = False
+            for tag in target_tags:
+                if tag not in audio.tags:
+                    continue
+                old_value = audio.tags[tag][0]
+                if re.search(regex, old_value):
+                    new_value = re.sub(regex, replace, old_value)
+                    audio.tags[tag] = new_value
+                    changed = True
+            if changed:
+                audio.save()
+            result.append((audio, path))
+
+        return result
+
+# def applyRegex(audio_files,
+#                regex,
+#                target_tags=("artist",
+#                             "album",
+#                             "genre",
+#                             "tracknumber",
+#                             "title"),
+#                replace="",
+#                dry_run=True):
+#     result = []
+#     for audio, path in audio_files:
+#         changes = {}
+#         for tag in target_tags:
+#             if tag not in audio.tags:
+#                 continue
+#             old_value = audio.tags[tag][0]
+#             if not re.search(regex, audio.tags[tag][0]):
+#                 continue
+#             new_value = re.sub(regex, replace, old_value)
+#             changes.tags[tag] = new_value
+#             if not dry_run:
+#                 audio.tags[tag] = new_value
+#         if changes:
+#             console.print("{} = {}".format(audio, path))
+#             if not dry_run:
+#                 audio.save()
+#             result.append((audio, path))
+#     return result
+#
 
 
 def modifyMetadata(audio_files,
-                   regex=None,
+                   dry_run=True,
                    target_tags=["artist",
                                 "album",
                                 "genre",
                                 "tracknumber",
                                 "title"],
+                   regex=None,
                    replace=None,
-                   dry_run=True):
+                   ):
+    if len(target_tags) < 1:
+        target_tags = radioSelection("Select tags to apply modifications to",
+                                     ["artist",
+                                      "album",
+                                      "genre",
+                                      "tracknumber",
+                                      "title"])
     if regex is None:
-        prompt = Prompt.ask("Pattern")
-        regex = re.compile(prompt)
-    if replace is None:
-        prompt = Prompt.ask("Replace by")
-        replace = prompt
+        regex = re.compile(Prompt.ask("Pattern"))
     filter_result = filterAudioFiles(audio_files, regex, target_tags)
     if filter_result is not None:
-        printSelectedAudioFiles(filter_result,
-                                target_tags)
-        console.print("<{}> -> <{}>"
-                      .format(regex.pattern, replace),
-                      highlight=False)
-        preview = applyRegex(filter_result,
-                             regex,
-                             target_tags,
-                             replace)
-        printSelectedAudioFiles(preview, target_tags)
-        choice = Confirm.ask("Proceed?")
-        if choice:
-            applyRegex(filter_result,
-                       regex,
-                       target_tags,
-                       replace,
-                       False)
+        printMetadata(filter_result, regex, target_tags, "bold green")
+    else:
+        return
+    if replace is None:
+        replace = Prompt.ask("Replace by")
+    preview = applyRegex(filter_result,
+                         regex,
+                         target_tags,
+                         replace,
+                         True)
+    printPreview(preview)
+    choice = Confirm.ask("Proceed?")
+    if choice:
+        applyRegex(filter_result,
+                   regex,
+                   target_tags,
+                   replace,
+                   False)
 
 
 def applyPresets(audio_files, presets=None):
@@ -524,47 +566,47 @@ def applyPresets(audio_files, presets=None):
     for preset in presets:
         if preset == 'A':
             modifyMetadata(audio_files,
-                           re.compile(r'([^,;]+)[,;].*'),
+                           False,
                            ["artist"],
-                           r'\1',
-                           False)
+                           re.compile(r'([^,;]+)[,;].*'),
+                           r'\1')
         elif preset == 'C':
             modifyMetadata(audio_files,
-                           re.compile(r'\b\w+\b'),
+                           False,
                            ["album",
                             "artist",
                             "genre",
                             "title"],
+                           re.compile(r'\b\w+\b'),
                            lambda m: m.group(0)
                            if m.group(0) == m.group(0).title()
-                           else m.group(0).title(),
-                           False)
+                           else m.group(0).title())
         elif preset == 'P':
             modifyMetadata(audio_files,
-                           re.compile(r'\s*\([^()]*\)\s*'),
+                           False,
                            ["artist",
                             "album",
                             "genre",
                             "title"],
-                           '',
-                           False)
+                           re.compile(r'\s*\([^()]*\)\s*'),
+                           '')
         elif preset == 'W':
             modifyMetadata(audio_files,
-                           re.compile(r'[\/\0\*\?\[\]\{\}~!$&;|<>"\'`\\]'),
+                           False,
                            ["artist",
                             "album",
                             "genre",
                             "tracknumber",
                             "title"],
-                           '',
-                           False)
+                           re.compile(r'[\/\0\*\?\[\]\{\}~!$&;|<>"\'`\\]'),
+                           '')
         elif preset == 'Z':
             modifyMetadata(audio_files,
-                           re.compile(r'\b(\d)\b'),
+                           False,
                            ["tracknumber",
                             "title"],
-                           r'0\1',
-                           False)
+                           re.compile(r'\b(\d)\b'),
+                           r'0\1')
 
 
 def selectAudioFiles(audio_files):
@@ -703,10 +745,10 @@ else:
 
     if args.modify:
         modifyMetadata(audio_files,
+                       False,
+                       [],
                        re.compile(args.modify[0]),
-                       args.modify[1].split(";"),
-                       None,
-                       False)
+                       args.modify[1].split(";"))
     if args.format:
         applyPresets(audio_files, None)
 
