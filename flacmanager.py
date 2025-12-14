@@ -221,7 +221,7 @@ def printMetadata(audio_files,
                 else:
                     record.append(f"{value}")
             else:
-                record.append("[dim]N/A")
+                record.append("[dim]Not found")
         if match:
             record.append(f"[{style}]{path.name}")
         else:
