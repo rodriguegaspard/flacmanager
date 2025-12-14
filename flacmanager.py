@@ -117,7 +117,7 @@ def tweakAudioFiles(tag, audio_files):
         else:
             old_value = ""
         choice = Prompt.ask(
-            f"[italic cyan]{os.path.basename(path)}[/] : "
+            f"[italic cyan]{path.name}[/] : "
             f"[[bold]{old_value}[/]] -> [?] ",
             default=old_value
             )
