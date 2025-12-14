@@ -301,30 +301,22 @@ def orderAudioFiles(audio_files):
             console.print(f"Could not rename {path.name} : missing tags.")
 
 
-def deleteCoverArtAndLyrics(audio_files):
-    choice = Confirm.ask(f"This will remove ALL cover art and lyrics"
+def deleteUselessTags(audio_files):
+    choice = Confirm.ask(f"This will remove ALL tags and cover art except: "
+                         f"artist, album, genre, tracknumber, title "
                          f" from {len(audio_files)} files. Proceed?")
+    tags = ("artist", "album", "genre", "tracknumber", "title")
     if choice:
         with console.status("Deleting cover art and lyrics..",
                             spinner="line"):
             for audio, path in audio_files:
+                for key, value in audio.tags.items():
+                    if key not in tags:
+                        del audio.tags[key]
                 audio.clear_pictures()
                 audio.save()
-                removeLyrics(audio_files)
     else:
         console.print("No modifications have been made.")
-
-
-def removeLyrics(audio_files):
-    lyric_keys = ("LYRICS", "UNSYNCEDLYRICS", "LYRIC")
-    removed = False
-    for audio, path in audio_files:
-        for key, value in audio.tags.items():
-            if key.upper() in lyric_keys:
-                del audio.tags[key]
-                removed = True
-        if removed:
-            audio.save()
 
 
 def listSelection(message, choices):
@@ -686,7 +678,8 @@ if args.interactive:
     interactiveMode(audio_files)
 else:
     if args.delete:
-        deleteCoverArtAndLyrics(audio_files)
+        deleteUselessTags(audio_files)
+        # deleteCoverArtAndLyrics(audio_files)
 
     if args.rename:
         audio_files = renameAudioFiles(audio_files)
