@@ -64,7 +64,7 @@ def interactiveHelp():
     modify - Bulk-modifies tags.
     preset - Apply formatting presets.
     order - Prefixes title with tracknumber.
-    rename - Renames files to '{tracknumber} - {title}'.
+    rename - Renames files using tracknumber and title.
     exit - Quits the interactive mode.
 ------------------------------------
                   ''')
@@ -74,7 +74,7 @@ def interactiveMode(audio_files):
     console.print("Welcome to the interactive mode.")
     choice = ""
     while choice != "exit":
-        choice = Prompt.ask("i> ",
+        choice = Prompt.ask("i>",
                             choices=("help",
                                      "list",
                                      "tweak",
@@ -116,11 +116,11 @@ def tweakAudioFiles(tag, audio_files):
             old_value = audio.tags[tag][0]
         else:
             old_value = ""
-        choice = Prompt.ask('[italic cyan]{}[/] : [[bold]{}[/]] -> [?] '
-                            .format(
-                                os.path.basename(path),
-                                old_value),
-                            default=old_value)
+        choice = Prompt.ask(
+            f"[italic cyan]{os.path.basename(path)}[/] : "
+            f"[[bold]{old_value}[/]] -> [?] ",
+            default=old_value
+            )
         if choice == 'q':
             break
         elif choice == 'c':
@@ -133,7 +133,7 @@ def tweakAudioFiles(tag, audio_files):
 def addPicture(picture, audio_files):
     exts = (".jpg", ".jpeg", ".bmp", ".png", ".gif")
     if not os.path.exists(picture) or not os.path.splitext(picture)[1] in exts:
-        console.print("ERROR: {} is not a valid image file.".format(picture))
+        console.print(f"ERROR: {picture} is not a valid image file.")
     else:
         coverArt = mutagen.flac.Picture()
         with open(picture, "rb") as image_data:
@@ -143,8 +143,8 @@ def addPicture(picture, audio_files):
         coverArt.width = 500
         coverArt.height = 500
         coverArt.depth = 16
-        choice = Confirm.ask('{} will be the cover art for {} files. Proceed?'
-                             .format(picture, len(audio_files)))
+        choice = Confirm.ask(f"{picture} will be the cover art for "
+                             f"{len(audio_files)} files. Proceed?")
         if choice:
             with console.status("Adding cover art..",
                                 spinner="line"):
@@ -217,15 +217,15 @@ def printMetadata(audio_files,
                         regex is not None
                         and re.search(regex, value)
                         and tag in target_tags):
-                    record.append("[{}]{}".format(style, value))
+                    record.append(f"[{style}]{value}")
                 else:
-                    record.append("{}".format(value))
+                    record.append(f"{value}")
             else:
                 record.append("[dim]N/A")
         if match:
-            record.append("[{}]{}".format(style, path.name))
+            record.append(f"[{style}]{path.name}")
         else:
-            record.append("{}".format(path.name))
+            record.append(f"{path.name}")
         table.add_row(*record)
     console.print(table)
 
@@ -283,20 +283,17 @@ def parseAudioDirectories(arguments, is_recursive=False):
 def orderAudioFiles(audio_files):
     for audio, path in audio_files:
         if "tracknumber" in audio.tags and "title" in audio.tags:
-            new_title = "{} - {}".format(
-                    audio.tags["tracknumber"][0],
-                    audio.tags["title"][0])
+            new_title = f"{audio.tags["tracknumber"][0]} - "
+            f"{audio.tags["title"][0]}"
             audio.tags["title"] = new_title
             audio.save()
         else:
-            console.print("Could not rename {} : missing tags."
-                          .format(path.name))
+            console.print(f"Could not rename {path.name} : missing tags.")
 
 
 def deleteCoverArtAndLyrics(audio_files):
-    choice = Confirm.ask('This will remove ALL cover art and lyrics '
-                         'from {} files. Proceed?'
-                         .format(len(audio_files)))
+    choice = Confirm.ask(f"This will remove ALL cover art and lyrics"
+                         f" from {len(audio_files)} files. Proceed?")
     if choice:
         with console.status("Deleting cover art and lyrics..",
                             spinner="line"):
