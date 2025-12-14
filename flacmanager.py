@@ -608,10 +608,6 @@ parser.add_argument("-d",
                     "--directory",
                     action="store_true",
                     help='Takes directories as arguments.')
-parser.add_argument("-R",
-                    "--recursive",
-                    action="store_true",
-                    help='Recursive search. Only words with the -d flag.')
 parser.add_argument("-l",
                     "--list",
                     action="store_true",
@@ -659,19 +655,22 @@ parser.add_argument("-F",
                     "--format",
                     action="store_true",
                     help='Apply one, or several formatting presets.')
+parser.add_argument("-R",
+                    "--regex",
+                    action="store_true",
+                    help='Multi-tag pattern matching and replace')
 args = parser.parse_args()
 
 
 if args.directory:
-    audio_files = parseAudioDirectories(args.input, args.recursive)
+    audio_files = parseAudioDirectories(args.input, True)
 else:
     audio_files = parseAudioFiles(args.input)
 
 if args.filter:
     audio_files = filterAudioFiles(audio_files,
-                                   re.compile(args.filter[0]),
-                                   args.filter[1].split(";"))
-
+                                   re.compile(args.filter[1]),
+                                   args.filter[0].split(";"))
 if args.interactive:
     interactiveMode(audio_files)
 else:
