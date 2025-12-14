@@ -9,6 +9,8 @@ from mutagen._util import MutagenError
 
 from base64 import b64encode
 
+from pathlib import Path
+
 from rich import box
 from rich.console import Console
 from rich.table import Table
@@ -25,27 +27,27 @@ console = Console()
 
 def filterAudioFiles(audio_files,
                      regex=r'',
-                     target_tags=["artist",
+                     target_tags=("artist",
                                   "album",
                                   "genre",
                                   "tracknumber",
-                                  "title"]):
+                                  "title")):
     if not target_tags:
         target_tags = radioSelection("Select tags you wish to filter on",
-                                     ["artist",
+                                     ("artist",
                                       "album",
                                       "genre",
                                       "tracknumber",
-                                      "title"])
+                                      "title"))
     result = []
-    for file in audio_files:
+    for audio, path in audio_files:
         match = False
         for tag in target_tags:
-            if tag in file[0].tags:
-                if re.search(regex, file[0].tags[tag][0]):
+            if tag in audio.tags:
+                if re.search(regex, audio.tags[tag][0]):
                     match = True
         if match:
-            result.append(file)
+            result.append((audio, path))
     if len(result) < 1:
         console.print('[bold red]Filter returned an empty argument list.[/]')
         return None
@@ -73,14 +75,14 @@ def interactiveMode(audio_files):
     choice = ""
     while choice != "exit":
         choice = Prompt.ask("i> ",
-                            choices=["help",
+                            choices=("help",
                                      "list",
                                      "tweak",
                                      "modify",
                                      "preset",
                                      "order",
                                      "rename",
-                                     "exit"],
+                                     "exit"),
                             default="help",
                             show_choices=True)
         if choice == "help":
@@ -103,7 +105,7 @@ def interactiveMode(audio_files):
         elif choice == "order":
             orderAudioFiles(audio_files)
         elif choice == "rename":
-            renameAudioFiles(audio_files)
+            audio_files = renameAudioFiles(audio_files)
 
 
 def tweakAudioFiles(tag, audio_files):
@@ -129,7 +131,7 @@ def tweakAudioFiles(tag, audio_files):
 
 
 def addPicture(picture, audio_files):
-    exts = [".jpg", ".jpeg", ".bmp", ".png", ".gif"]
+    exts = (".jpg", ".jpeg", ".bmp", ".png", ".gif")
     if not os.path.exists(picture) or not os.path.splitext(picture)[1] in exts:
         console.print("ERROR: {} is not a valid image file.".format(picture))
     else:
@@ -146,59 +148,46 @@ def addPicture(picture, audio_files):
         if choice:
             with console.status("Adding cover art..",
                                 spinner="line"):
-                for file in audio_files:
-                    if type(file) is mutagen.flac.FLAC:
-                        file[0].clear_pictures()
-                        file[0].add_picture(coverArt)
+                for audio, path in audio_files:
+                    if type(audio) is mutagen.flac.FLAC:
+                        audio.clear_pictures()
+                        audio.add_picture(coverArt)
                     else:
                         b64 = b64encode(coverArt.write())
-                        file[0]['metadata_block_picture'] = b64.decode('ascii')
-                    file[0].save()
+                        audio['metadata_block_picture'] = b64.decode('ascii')
+                    audio.save()
 
 
-def sortAudioFiles(audio_files, path=""):
-    new_audio_files = []
-    for file in audio_files:
-        if "artist" in file[0].tags:
-            artist = file[0].tags["artist"][0]
-            if "album" in file[0].tags:
-                album = file[0].tags["album"][0]
-            else:
-                album = "Unknown Album"
-        else:
-            artist = "Unknown Artist"
-        albumPath = os.path.normpath(os.path.abspath(path)
-                                     + "/"
-                                     + artist
-                                     + "/" + album)
-        if not os.path.isdir(albumPath):
-            os.makedirs(albumPath)
-        os.rename(file[1], os.path.normpath(albumPath
-                                            + "/"
-                                            + os.path.basename(file[1])))
-        new_audio_files.append((file[0], os.path.normpath(albumPath
-                                                          + "/"
-                                                          + os
-                                                          .path
-                                                          .basename(file[1]))))
-    return new_audio_files
+def sortAudioFiles(audio_files, base_path=""):
+    result = []
+    base_path = Path(base_path).resolve()
+    for audio, path in audio_files:
+        file_path = Path(path)
+        artist = audio.tags.get("artist", ["Unknown Artist"])[0]
+        album = audio.tags.get("album", ["Unknown Album"])[0]
+        album_path = base_path / artist / album
+        album_path.mkdir(parents=True, exist_ok=True)
+        destination = album_path / file_path.name
+        file_path.rename(destination)
+        result.append((audio, destination))
+    return result
 
 
 def renameAudioFiles(audio_files):
     new_audio_files = []
-    for file in audio_files:
-        if "tracknumber" in file[0].tags and "title" in file[0].tags:
-            filename = os.path.normpath(os.path.dirname(file[1])
-                                        + "/"
-                                        + file[0].tags["tracknumber"][0]
-                                        + " - "
-                                        + file[0].tags["title"][0]
-                                        + os.path.splitext(file[1])[1])
-            os.rename(file[1], filename)
-            new_audio_files.append((file[0], filename))
+    for audio, path in audio_files:
+        file_path = Path(path)
+        if "tracknumber" in audio.tags and "title" in audio.tags:
+            track = audio.tags["tracknumber"][0]
+            title = audio.tags["title"][0]
+            new_name = f"{track} - {title}{file_path.suffix}"
+            destination = file_path.with_name(new_name)
+            file_path.rename(destination)
+            new_audio_files.append((audio, destination))
         else:
-            console.print("Could not rename {} : missing tags."
-                          .format(os.path.basename(file[1])))
+            console.print(
+                f"Could not rename {file_path.name} : missing tags."
+            )
     return new_audio_files
 
 
@@ -212,18 +201,18 @@ def printMetadata(audio_files,
                   style=None):
     match = False
     table = Table(show_header=True, box=box.MINIMAL_HEAVY_HEAD)
-    tags = ["artist", "album", "genre", "tracknumber", "title"]
+    tags = ("artist", "album", "genre", "tracknumber", "title")
     table.add_column("Artist", no_wrap=True, min_width=10, max_width=20)
     table.add_column("Album", no_wrap=True, min_width=10, max_width=20)
     table.add_column("Genre", no_wrap=True, min_width=5, max_width=20)
     table.add_column("#", no_wrap=True, min_width=3, max_width=30)
     table.add_column("Title", no_wrap=True, min_width=10, max_width=40)
     table.add_column("Filename", no_wrap=True, min_width=10, max_width=40)
-    for file in audio_files:
+    for audio, path in audio_files:
         record = []
         for tag in tags:
-            if tag in file[0].tags:
-                value = file[0].tags[tag][0]
+            if tag in audio.tags:
+                value = audio.tags[tag][0]
                 if (
                         regex is not None
                         and re.search(regex, value)
@@ -234,9 +223,9 @@ def printMetadata(audio_files,
             else:
                 record.append("[dim]N/A")
         if match:
-            record.append("[{}]{}".format(style, os.path.basename(file[1])))
+            record.append("[{}]{}".format(style, path.name))
         else:
-            record.append("{}".format(os.path.basename(file[1])))
+            record.append("{}".format(path.name))
         table.add_row(*record)
     console.print(table)
 
@@ -251,8 +240,9 @@ def parseAudioFiles(arguments):
         except MutagenError:
             console.print('Something went wrong when trying to'
                           'read audio files given as arguments.')
+        path = Path(file)
         if mutagen_file is not None:
-            audio_files.append((mutagen.File(file), file))
+            audio_files.append((mutagen.File(file), path))
     if not audio_files:
         console.print('No valid audio files found'
                       'in arguments. Nothing to do.')
@@ -262,41 +252,45 @@ def parseAudioFiles(arguments):
 
 def parseAudioDirectories(arguments, is_recursive=False):
     audio_files = []
-    sorted_arguments = []
-    mutagen_file = None
-    glob_regex = "/*" if not is_recursive else "/**/*"
+    paths = []
     for directory in arguments:
-        for file in glob.glob(directory + glob_regex, recursive=is_recursive):
-            sorted_arguments.append(file)
-
-    for file in sorted(sorted_arguments):
-        if not os.path.isdir(file):
+        base = Path(directory)
+        if is_recursive:
+            paths.extend(base.rglob("*"))
+        else:
+            paths.extend(base.glob("*"))
+    for path in sorted(paths):
+        if path.is_file():
             try:
-                mutagen_file = mutagen.File(file)
+                audio = mutagen.File(path)
             except MutagenError:
-                console.print('Something went wrong while trying'
-                              'to read audio files given as arguments.')
-            if mutagen_file is not None:
-                audio_files.append((mutagen.File(file), file))
+                console.print(
+                    "Something went wrong while trying "
+                    "to read audio files given as arguments."
+                )
+                continue
+            if audio is not None:
+                audio_files.append((audio, path))
     if not audio_files:
-        console.print('No valid audio files found in'
-                      'the directories given as arguments. Nothing to do.')
+        console.print(
+            "No valid audio files found in "
+            "the directories given as arguments. Nothing to do."
+        )
         sys.exit()
-
     return audio_files
 
 
 def orderAudioFiles(audio_files):
-    for file in audio_files:
-        if "tracknumber" in file[0].tags and "title" in file[0].tags:
+    for audio, path in audio_files:
+        if "tracknumber" in audio.tags and "title" in audio.tags:
             new_title = "{} - {}".format(
-                    file[0].tags["tracknumber"][0],
-                    file[0].tags["title"][0])
-            file[0].tags["title"] = new_title
-            file[0].save()
+                    audio.tags["tracknumber"][0],
+                    audio.tags["title"][0])
+            audio.tags["title"] = new_title
+            audio.save()
         else:
             console.print("Could not rename {} : missing tags."
-                          .format(os.path.basename(file[1])))
+                          .format(path.name))
 
 
 def deleteCoverArtAndLyrics(audio_files):
@@ -306,24 +300,24 @@ def deleteCoverArtAndLyrics(audio_files):
     if choice:
         with console.status("Deleting cover art and lyrics..",
                             spinner="line"):
-            for file in audio_files:
-                file[0].clear_pictures()
-                file[0].save()
+            for audio, path in audio_files:
+                audio.clear_pictures()
+                audio.save()
                 removeLyrics(audio_files)
     else:
         console.print("No modifications have been made.")
 
 
 def removeLyrics(audio_files):
-    lyric_keys = ["LYRICS", "UNSYNCEDLYRICS", "LYRIC"]
+    lyric_keys = ("LYRICS", "UNSYNCEDLYRICS", "LYRIC")
     removed = False
-    for file in audio_files:
-        for key in file[0].tags.items():
-            if key[0].upper() in lyric_keys:
-                del file[0].tags[key[0]]
+    for audio, path in audio_files:
+        for key, value in audio.tags.items():
+            if key.upper() in lyric_keys:
+                del audio.tags[key]
                 removed = True
         if removed:
-            file[0].save()
+            audio.save()
 
 
 def listSelection(message, choices):
@@ -421,7 +415,6 @@ def applyRegex(audio_files,
         preview = []
         for audio, path in audio_files:
             file_preview = {"path": path, "changes": {}}
-
             for tag in target_tags:
                 if tag not in audio.tags:
                     continue
@@ -430,7 +423,6 @@ def applyRegex(audio_files,
                     new_value = re.sub(regex, replace, old_value)
                     file_preview["changes"][tag] = {"old": old_value,
                                                     "new": new_value}
-
             if file_preview["changes"]:
                 preview.append(file_preview)
         return preview
@@ -454,21 +446,21 @@ def applyRegex(audio_files,
 
 def modifyMetadata(audio_files,
                    dry_run=True,
-                   target_tags=["artist",
+                   target_tags=("artist",
                                 "album",
                                 "genre",
                                 "tracknumber",
-                                "title"],
+                                "title"),
                    regex=None,
                    replace=None,
                    ):
     if len(target_tags) < 1:
         target_tags = radioSelection("Select tags to apply modifications to",
-                                     ["artist",
+                                     ("artist",
                                       "album",
                                       "genre",
                                       "tracknumber",
-                                      "title"])
+                                      "title"))
     if regex is None:
         regex = re.compile(Prompt.ask("Pattern"))
     filter_result = filterAudioFiles(audio_files, regex, target_tags)
@@ -494,14 +486,14 @@ def modifyMetadata(audio_files,
 
 
 def applyPresets(audio_files, presets=None):
-    choices = ['A',
+    choices = ('A',
                'C',
                'P',
                'W',
-               'Z']
+               'Z')
     console.print('''
 ------------------------------------
-    A - Only keep the first artist.
+    A - Only keep the first artist/genre.
     C - Capitalizes every word in the title tag.
     P - Removes everything under parentheses.
     W - Removes wildcards characters.
@@ -515,16 +507,17 @@ def applyPresets(audio_files, presets=None):
         if preset == 'A':
             modifyMetadata(audio_files,
                            False,
-                           ["artist"],
+                           ("artist",
+                            "genre"),
                            re.compile(r'([^,;]+)[,;].*'),
                            r'\1')
         elif preset == 'C':
             modifyMetadata(audio_files,
                            False,
-                           ["album",
+                           ("album",
                             "artist",
                             "genre",
-                            "title"],
+                            "title"),
                            re.compile(r'\b\w+\b'),
                            lambda m: m.group(0)
                            if m.group(0) == m.group(0).title()
@@ -532,27 +525,26 @@ def applyPresets(audio_files, presets=None):
         elif preset == 'P':
             modifyMetadata(audio_files,
                            False,
-                           ["artist",
+                           ("artist",
                             "album",
                             "genre",
-                            "title"],
+                            "title"),
                            re.compile(r'\s*\([^()]*\)\s*'),
                            '')
         elif preset == 'W':
             modifyMetadata(audio_files,
                            False,
-                           ["artist",
+                           ("artist",
                             "album",
                             "genre",
                             "tracknumber",
-                            "title"],
+                            "title"),
                            re.compile(r'[\/\0\*\?\[\]\{\}~!$&;|<>"\'`\\]'),
                            '')
         elif preset == 'Z':
             modifyMetadata(audio_files,
                            False,
-                           ["tracknumber",
-                            "title"],
+                           ["tracknumber"],
                            re.compile(r'\b(\d)\b'),
                            r'0\1')
 
@@ -696,7 +688,7 @@ else:
                        False,
                        [],
                        re.compile(args.modify[0]),
-                       args.modify[1].split(";"))
+                       args.modify[1])
     if args.format:
         applyPresets(audio_files, None)
 
