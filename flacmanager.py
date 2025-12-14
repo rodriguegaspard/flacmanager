@@ -217,8 +217,6 @@ def printMetadata(audio_files,
                     record.append(f"[{style}]{value}")
                 else:
                     record.append(f"{value}")
-            else:
-                record.append("[dim]Not found")
         if match:
             record.append(f"[{style}]{path.name}")
         else:
@@ -588,10 +586,10 @@ def printPreview(preview):
         console.print("[bold green]No changes detected.[/bold green]")
         return
     table = Table(show_header=True, header_style="bold")
-    table.add_column("Tag", min_width=5, max_width=15)
-    table.add_column("Old Value", style="red", max_width=30)
-    table.add_column("New Value", style="green", max_width=30)
-    table.add_column("Filename",  overflow="fold", max_width=30)
+    table.add_column("Tag", no_wrap=True, min_width=5, max_width=15)
+    table.add_column("Old Value", no_wrap=True, style="red", max_width=30)
+    table.add_column("New Value", no_wrap=True, style="green", max_width=30)
+    table.add_column("Filename",  no_wrap=True, overflow="fold", max_width=30)
     for file_preview in preview:
         path = file_preview["path"]
         changes = file_preview["changes"]
