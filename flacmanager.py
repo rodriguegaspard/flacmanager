@@ -418,26 +418,8 @@ def applyRegex(audio_files,
                             "title"),
                replace="",
                dry_run=True):
-    """
-    Apply regex replacement to mutagen.File tags.
-
-    Parameters:
-        audio_files: list of (mutagen.File, str)
-        regex: compiled regex pattern
-        target_tags: tags to modify
-        replace: replacement string
-        dry_run: if True, don't mutate original files
-
-    Returns:
-        If dry_run=True:
-            List of dicts with preview changes for printing
-        If dry_run=False:
-            List of (mutagen.File, str) with applied changes
-    """
-
     if dry_run:
         preview = []
-
         for audio, path in audio_files:
             file_preview = {"path": path, "changes": {}}
 
@@ -447,16 +429,14 @@ def applyRegex(audio_files,
                 old_value = audio.tags[tag][0]
                 if re.search(regex, old_value):
                     new_value = re.sub(regex, replace, old_value)
-                    file_preview["changes"][tag] = {"old": old_value, "new": new_value}
+                    file_preview["changes"][tag] = {"old": old_value,
+                                                    "new": new_value}
 
             if file_preview["changes"]:
                 preview.append(file_preview)
-
         return preview
-
     else:
         result = []
-
         for audio, path in audio_files:
             changed = False
             for tag in target_tags:
@@ -470,38 +450,7 @@ def applyRegex(audio_files,
             if changed:
                 audio.save()
             result.append((audio, path))
-
         return result
-
-# def applyRegex(audio_files,
-#                regex,
-#                target_tags=("artist",
-#                             "album",
-#                             "genre",
-#                             "tracknumber",
-#                             "title"),
-#                replace="",
-#                dry_run=True):
-#     result = []
-#     for audio, path in audio_files:
-#         changes = {}
-#         for tag in target_tags:
-#             if tag not in audio.tags:
-#                 continue
-#             old_value = audio.tags[tag][0]
-#             if not re.search(regex, audio.tags[tag][0]):
-#                 continue
-#             new_value = re.sub(regex, replace, old_value)
-#             changes.tags[tag] = new_value
-#             if not dry_run:
-#                 audio.tags[tag] = new_value
-#         if changes:
-#             console.print("{} = {}".format(audio, path))
-#             if not dry_run:
-#                 audio.save()
-#             result.append((audio, path))
-#     return result
-#
 
 
 def modifyMetadata(audio_files,
