@@ -283,8 +283,10 @@ def parseAudioDirectories(arguments, is_recursive=False):
 def orderAudioFiles(audio_files):
     for audio, path in audio_files:
         if "tracknumber" in audio.tags and "title" in audio.tags:
-            new_title = f"{audio.tags["tracknumber"][0]} - "
-            f"{audio.tags["title"][0]}"
+            new_title = (
+                    f"{audio.tags["tracknumber"][0]}"
+                    f" - {audio.tags["title"][0]}"
+                    )
             audio.tags["title"] = new_title
             audio.save()
         else:
@@ -550,10 +552,12 @@ def selectAudioFiles(audio_files):
     selection = []
     choices = list(
             map(
-                lambda x:
-                x[0].tags["album"][0] + " by "
-                + x[0].tags["artist"][0] + " ||| "
-                + x[0].tags["title"][0],
+                lambda f:
+                (
+                    f"{f[0].tags["artist"][0]}"
+                    f" by {f[0].tags["album"][0]}"
+                    f" <<<>>> {f[0].tags["title"][0]}"
+                ),
                 audio_files
                 ))
     selection = radioSelection("Please select one, or many, audio files",
