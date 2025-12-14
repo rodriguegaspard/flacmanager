@@ -227,19 +227,31 @@ def printMetadata(audio_files,
     console.print(table)
 
 
+def ensureBasicTags(audio):
+    tags = ('artist',
+            'album',
+            'genre',
+            'tracknumber',
+            'title')
+    for tag in tags:
+        if tag not in audio.tags:
+            audio.tags[tag] = ""
+
+
 def parseAudioFiles(arguments):
     audio_files = []
     mutagen_file = None
     sorted_arguments = sorted(list(arguments))
-    for file in sorted_arguments:
+    for audio in sorted_arguments:
         try:
-            mutagen_file = mutagen.File(file)
+            mutagen_file = mutagen.File(audio)
         except MutagenError:
             console.print('Something went wrong when trying to'
                           'read audio files given as arguments.')
-        path = Path(file)
+            ensureBasicTags(audio)
+        path = Path(audio)
         if mutagen_file is not None:
-            audio_files.append((mutagen.File(file), path))
+            audio_files.append((mutagen.File(audio), path))
     if not audio_files:
         console.print('No valid audio files found'
                       'in arguments. Nothing to do.')
@@ -267,6 +279,7 @@ def parseAudioDirectories(arguments, is_recursive=False):
                 )
                 continue
             if audio is not None:
+                ensureBasicTags(audio)
                 audio_files.append((audio, path))
     if not audio_files:
         console.print(
