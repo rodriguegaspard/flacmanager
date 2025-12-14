@@ -63,7 +63,6 @@ def interactiveHelp():
     preset - Apply formatting presets.
     order - Prefixes title with tracknumber.
     rename - Renames files to '{tracknumber} - {title}'.
-    select - Manual selection of files.
     exit - Quits the interactive mode.
 ------------------------------------
                   ''')
@@ -80,7 +79,6 @@ def interactiveMode(audio_files):
                                      "modify",
                                      "preset",
                                      "order",
-                                     "select",
                                      "rename",
                                      "exit"],
                             default="help",
@@ -90,43 +88,44 @@ def interactiveMode(audio_files):
         elif choice == "list":
             printMetadata(audio_files)
         elif choice == "tweak":
-            tag = Prompt.ask("Choose a tag to tweak",
-                             choices=["artist",
-                                      "album",
-                                      "genre",
-                                      "tracknumber",
-                                      "title"],
-                             show_choices=True)
-            tweakAudioFiles(tag, audio_files)
+            tag = listSelection("Select a tag to tweak:",
+                                ("artist",
+                                 "album",
+                                 "genre",
+                                 "tracknumber",
+                                 "title"))
+            filtered = selectAudioFiles(audio_files)
+            tweakAudioFiles(tag, filtered)
         elif choice == "modify":
             modifyMetadata(audio_files, False, [])
         elif choice == "preset":
             applyPresets(audio_files)
         elif choice == "order":
             orderAudioFiles(audio_files)
-        elif choice == "select":
-            filtered = selectAudioFiles(audio_files)
-            audio_files = filtered
+        elif choice == "rename":
+            renameAudioFiles(audio_files)
 
 
 def tweakAudioFiles(tag, audio_files):
-    for file in audio_files:
-        if tag in file[0].tags:
-            old_value = file[0].tags[tag][0]
+    console.print('[dim italic][Commands : c to continue,'
+                  'q to exit tweak mode][/]')
+    for audio, path in audio_files:
+        if tag in audio.tags:
+            old_value = audio.tags[tag][0]
         else:
             old_value = ""
-        choice = Prompt.ask('[dim italic](c: continue, '
-                            'q: quit)[/] '
-                            '[{}] -> [?] '
-                            .format(old_value),
+        choice = Prompt.ask('[italic cyan]{}[/] : [[bold]{}[/]] -> [?] '
+                            .format(
+                                os.path.basename(path),
+                                old_value),
                             default=old_value)
         if choice == 'q':
             break
         elif choice == 'c':
             continue
         else:
-            file[0].tags[tag] = choice
-            file[0].save()
+            audio.tags[tag] = choice
+            audio.save()
 
 
 def addPicture(picture, audio_files):
