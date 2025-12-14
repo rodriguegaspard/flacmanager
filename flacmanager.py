@@ -565,7 +565,7 @@ def selectAudioFiles(audio_files):
     titles = list(
             map(
                 lambda s:
-                re.sub(r'^.*?\s*\|\|\|\s*', '', s),
+                re.sub(r'.*<<<>>>\s*', '', s),
                 selection
                 )
             )
