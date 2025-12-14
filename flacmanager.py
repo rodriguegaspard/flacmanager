@@ -13,6 +13,7 @@ from rich import box
 from rich.console import Console
 from rich.table import Table
 from rich.prompt import Prompt, Confirm
+from rich.text import Text
 
 from prompt_toolkit import prompt
 from prompt_toolkit.key_binding import KeyBindings
@@ -208,25 +209,42 @@ def renameAudioFiles(audio_files):
     return new_audio_files
 
 
-def printMetadata(audio_files):
+def printMetadata(audio_files,
+                  regex=None,
+                  target_tags=("artist",
+                               "album",
+                               "genre",
+                               "tracknumber",
+                               "title"),
+                  style=None):
+    match = False
     table = Table(show_header=True, box=box.MINIMAL_HEAVY_HEAD)
-    tags = ["album", "artist", "genre", "tracknumber", "title"]
-    table.add_column("Artist", no_wrap=True, min_width=10)
-    table.add_column("Album", no_wrap=True, min_width=10)
-    table.add_column("Genre", no_wrap=True, min_width=5)
-    table.add_column("#", no_wrap=True, min_width=3)
-    table.add_column("Title", no_wrap=True, min_width=10)
-    table.add_column("Filename", no_wrap=True, min_width=10)
+    tags = ["artist", "album", "genre", "tracknumber", "title"]
+    table.add_column("Artist", no_wrap=True, min_width=10, max_width=20)
+    table.add_column("Album", no_wrap=True, min_width=10, max_width=20)
+    table.add_column("Genre", no_wrap=True, min_width=5, max_width=20)
+    table.add_column("#", no_wrap=True, min_width=3, max_width=30)
+    table.add_column("Title", no_wrap=True, min_width=10, max_width=40)
+    table.add_column("Filename", no_wrap=True, min_width=10, max_width=40)
     for file in audio_files:
         record = []
         for tag in tags:
             if tag in file[0].tags:
-                record.append(file[0].tags[tag][0])
+                value = file[0].tags[tag][0]
+                if (
+                        regex is not None
+                        and re.search(regex, value)
+                        and tag in target_tags):
+                    record.append("[{}]{}".format(style, value))
+                else:
+                    record.append("{}".format(value))
             else:
-                record.append("N/A")
-        record.append(os.path.basename(file[1]))
+                record.append("[dim]N/A")
+        if match:
+            record.append("[{}]{}".format(style, os.path.basename(file[1])))
+        else:
+            record.append("{}".format(os.path.basename(file[1])))
         table.add_row(*record)
-
     console.print(table)
 
 
@@ -572,6 +590,31 @@ def selectAudioFiles(audio_files):
     return filtered
 
 
+def printPreview(preview):
+    if not preview:
+        console.print("[bold green]No changes detected.[/bold green]")
+        return
+    table = Table(show_header=True, header_style="bold")
+    table.add_column("Tag", min_width=5, max_width=15)
+    table.add_column("Old Value", style="red", max_width=30)
+    table.add_column("New Value", style="green", max_width=30)
+    table.add_column("Filename",  overflow="fold", max_width=30)
+    for file_preview in preview:
+        path = file_preview["path"]
+        changes = file_preview["changes"]
+        for tag, vals in changes.items():
+            old = vals["old"]
+            new = vals["new"]
+            if old != new:
+                old_text = Text(old, style="red")
+                new_text = Text(new, style="green")
+            else:
+                old_text = Text(old)
+                new_text = Text(new)
+            table.add_row(tag, old_text, new_text, os.path.basename(path))
+    console.print(table)
+
+
 parser = argparse.ArgumentParser(
         description='Manages metadata for multiple audio formats.')
 parser.add_argument("input",
@@ -677,4 +720,4 @@ else:
             audio_files = sortAudioFiles(audio_files)
 
     if args.list:
-        printSelectedAudioFiles(audio_files)
+        printMetadata(audio_files)
