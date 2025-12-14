@@ -626,8 +626,8 @@ parser.add_argument("-s",
 parser.add_argument("-m",
                     "--modify",
                     nargs=2,
-                    metavar=('PATTERN', 'TAGS'),
-                    help='Replaces values in TAGS matched by PATTERN')
+                    metavar=('TAGS', 'VALUE'),
+                    help='Replaces all TAG values by VALUE')
 parser.add_argument("-p",
                     "--picture",
                     nargs=1,
@@ -641,8 +641,11 @@ parser.add_argument("-i",
 parser.add_argument("-f",
                     "--filter",
                     nargs=2,
-                    metavar=('TAG', 'VALUE'),
-                    help="Filters the input files using tag values.")
+                    metavar=('TAGS', 'PATTERN'),
+                    help=(
+                        'Filters audio files using PATTERN on TAG values. '
+                        'Specify multiple tags by separating them with ;')
+                    )
 parser.add_argument("-o",
                     "--order",
                     action="store_true",
@@ -686,9 +689,17 @@ else:
     if args.modify:
         modifyMetadata(audio_files,
                        False,
-                       [],
-                       re.compile(args.modify[0]),
+                       args.modify[0].split(";"),
+                       r'^.*$',
                        args.modify[1])
+
+    if args.regex:
+        modifyMetadata(audio_files,
+                       False,
+                       [],
+                       None,
+                       None)
+
     if args.format:
         applyPresets(audio_files, None)
 
