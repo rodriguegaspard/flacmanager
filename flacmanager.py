@@ -52,7 +52,7 @@ def filterAudioFiles(audio_files,
         console.print('[bold red]Filter returned an empty argument list.[/]')
         return None
     else:
-        return result
+        return audio_files
 
 
 def interactiveHelp():
