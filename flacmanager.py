@@ -336,10 +336,10 @@ def orderAudioFiles(audio_files):
 def deleteUselessTags(audio_files):
     choice = Confirm.ask(f"This will remove ALL tags and cover art except: "
                          f"artist, album, genre, tracknumber, title "
-                         f" from {len(audio_files)} files. Proceed?")
+                         f"from {len(audio_files)} files. Proceed?")
     tags = ("artist", "album", "genre", "tracknumber", "title")
     if choice:
-        with console.status("Deleting cover art and lyrics..",
+        with console.status("Deleting cover art and useless tags..",
                             spinner="line"):
             for audio, path in audio_files:
                 for key, value in audio.tags.items():
