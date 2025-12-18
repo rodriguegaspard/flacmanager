@@ -124,7 +124,7 @@ def interactiveMode(audio_files):
         elif choice == "rename":
             audio_files = renameAudioFiles(filtered_audio_files)
         elif choice == "filter":
-            regex = Prompt.ask("Pattern to match")
+            regex = Prompt.ask("Pattern to match", default="^.*$")
             result = filterAudioFiles(audio_files, regex, "")
             if len(result) > 0:
                 filtered_audio_files = result
@@ -505,7 +505,7 @@ def modifyMetadata(audio_files,
                                       "tracknumber",
                                       "title"))
     if regex is None:
-        regex = re.compile(Prompt.ask("Pattern to match"))
+        regex = re.compile(Prompt.ask("Pattern to match", default="^.*$"))
     filter_result = filterAudioFiles(audio_files, regex, target_tags)
     if len(filter_result) > 0:
         printMetadata(filter_result, regex, target_tags, "bold green")
