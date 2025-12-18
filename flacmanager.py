@@ -505,7 +505,7 @@ def modifyMetadata(audio_files,
                                       "tracknumber",
                                       "title"))
     if regex is None:
-        regex = re.compile(Prompt.ask("Pattern"))
+        regex = re.compile(Prompt.ask("Pattern to match"))
     filter_result = filterAudioFiles(audio_files, regex, target_tags)
     if len(filter_result) > 0:
         printMetadata(filter_result, regex, target_tags, "bold green")
