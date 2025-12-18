@@ -415,9 +415,21 @@ def radioSelection(message, choices):
     def _(event):
         event.app.exit(result=list(selected))
 
+    @kb.add("A")
+    def _(event):
+        for item in choices:
+            selected.add(item)
+
+    @kb.add("X")
+    def _(event):
+        selected.clear()
+
     def render():
         lines = [f"\n{message}"
-                 "\x1b[3;90m [↑↓, Space: toggle, Enter: confirm] \x1b[0m", ""]
+                 "\x1b[3;90m [↑↓,"
+                 " Space: select,"
+                 " A: select all, X: clear selection,"
+                 " Enter: confirm] \x1b[0m", ""]
         for i, choice in enumerate(choices):
             mark = "[\x1b[1;36m*\x1b[0m]" if choice in selected else "[ ]"
             pointer = ">" if i == cursor["index"] else " "
