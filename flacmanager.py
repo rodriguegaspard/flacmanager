@@ -58,6 +58,7 @@ def interactiveHelp():
     help - Prints this help.
     list - Lists audio files.
     tweak - Iterates through audio files and prompts for modification.
+    filter - Filters audio files using regex.
     modify - Bulk-modifies tags.
     preset - Apply formatting presets.
     order - Prefixes title with tracknumber.
@@ -67,25 +68,44 @@ def interactiveHelp():
                   ''')
 
 
+def promptUser(choices, prefix="[bold cyan]i>[/]", default="help"):
+    choice = Prompt.ask(prompt=prefix, choices=choices, default=default)
+    return choice
+
+
 def interactiveMode(audio_files):
     console.print("Welcome to the interactive mode.")
     choice = ""
+    filtered_audio_files = audio_files
+    filterMode = False
     while choice != "exit":
-        choice = Prompt.ask("i>",
-                            choices=("help",
-                                     "list",
-                                     "tweak",
-                                     "modify",
-                                     "preset",
-                                     "order",
-                                     "rename",
-                                     "exit"),
-                            default="help",
-                            show_choices=True)
+        if not filterMode:
+            choice = promptUser(("help",
+                                 "list",
+                                 "filter",
+                                 "tweak",
+                                 "modify",
+                                 "preset",
+                                 "order",
+                                 "rename",
+                                 "exit"
+                                 ))
+        else:
+            choice = promptUser(("help",
+                                 "list",
+                                 "restore",
+                                 "tweak",
+                                 "modify",
+                                 "preset",
+                                 "order",
+                                 "rename",
+                                 "exit"),
+                                "[bold yellow]f>[/]"
+                                )
         if choice == "help":
             interactiveHelp()
         elif choice == "list":
-            printMetadata(audio_files)
+            printMetadata(filtered_audio_files)
         elif choice == "tweak":
             tag = listSelection("Select a tag to tweak:",
                                 ("artist",
@@ -93,16 +113,25 @@ def interactiveMode(audio_files):
                                  "genre",
                                  "tracknumber",
                                  "title"))
-            filtered = selectAudioFiles(audio_files)
+            filtered = selectAudioFiles(filtered_audio_files)
             tweakAudioFiles(tag, filtered)
         elif choice == "modify":
-            modifyMetadata(audio_files, False, [])
+            modifyMetadata(filtered_audio_files, False, [])
         elif choice == "preset":
-            applyPresets(audio_files)
+            applyPresets(filtered_audio_files)
         elif choice == "order":
-            orderAudioFiles(audio_files)
+            orderAudioFiles(filtered_audio_files)
         elif choice == "rename":
-            audio_files = renameAudioFiles(audio_files)
+            audio_files = renameAudioFiles(filtered_audio_files)
+        elif choice == "filter":
+            regex = Prompt.ask("Pattern to match")
+            result = filterAudioFiles(audio_files, regex, "")
+            if len(result) > 0:
+                filtered_audio_files = result
+                filterMode = True
+        elif choice == "restore":
+            filtered_audio_files = audio_files
+            filterMode = False
 
 
 def tweakAudioFiles(tag, audio_files):
