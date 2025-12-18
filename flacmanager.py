@@ -710,9 +710,11 @@ args = parser.parse_args()
 
 
 if args.directory:
-    audio_files = parseAudioDirectories(args.input, True)
+    with console.status("Parsing directories..", spinner="line"):
+        audio_files = parseAudioDirectories(args.input, True)
 else:
-    audio_files = parseAudioFiles(args.input)
+    with console.status("Parsing audio files..", spinner="line"):
+        audio_files = parseAudioFiles(args.input)
 
 if args.filter:
     audio_files = filterAudioFiles(audio_files,
@@ -723,7 +725,6 @@ if args.interactive:
 else:
     if args.delete:
         deleteUselessTags(audio_files)
-        # deleteCoverArtAndLyrics(audio_files)
 
     if args.rename:
         audio_files = renameAudioFiles(audio_files)
@@ -758,4 +759,5 @@ else:
             audio_files = sortAudioFiles(audio_files)
 
     if args.list:
-        printMetadata(audio_files)
+        with console.status("Printing metadata..", spinner="line"):
+            printMetadata(audio_files)
