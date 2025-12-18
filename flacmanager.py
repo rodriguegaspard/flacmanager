@@ -135,6 +135,9 @@ def interactiveMode(audio_files):
 
 
 def tweakAudioFiles(tag, audio_files):
+    if len(audio_files) < 1:
+        console.print("[bold red]Empty selection. Nothing to do.[/]")
+        return
     console.print('[dim italic][Commands : c to continue,'
                   'q to exit tweak mode][/]')
     for audio, path in audio_files:
