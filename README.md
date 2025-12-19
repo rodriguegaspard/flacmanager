@@ -12,7 +12,8 @@ pip install -r requirements.txt
 
 # USAGE
 ```
-usage: flacmanager [-h] [-d] [-R] [-l] [-c] [-r] [-s [destination]] [-m TAG VALUE] [-p IMAGE] [-i] [-f TAG VALUE] [-o] [-z] [-D] files [files ...]
+usage: flacmanager [-h] [-d] [-l] [-r] [-s [destination]] [-m TAGS VALUE] [-p IMAGE] [-i] [-f TAGS PATTERN] [-o] [-D] [-F] [-R]
+                   files [files ...]
 
 Manages metadata for multiple audio formats.
 
@@ -21,23 +22,20 @@ positional arguments:
 
 options:
   -h, --help            show this help message and exit
-  -d, --directory       Takes directories containing audio files as argument.
-  -R, --recursive       Searches recursively in the directories provided as arguments. Can only be used in conjonction with the -d/--directory
-                        flag.
+  -d, --directory       Takes directories as arguments.
   -l, --list            Prints the metadata of the audio files.
-  -c, --check           Prints metadata issues (missing tags or album covers).
   -r, --rename          Renames files using tracknumber and title metadata.
-  -s [destination], --sort [destination]
-                        Sorts audio files by artist and by album in folders at the destination specified.
-  -m TAG VALUE, --modify TAG VALUE
-                        Modifies TAG value to VALUE.
-  -p IMAGE, --picture IMAGE
-                        Adds IMAGE as cover art.
+  -s, --sort [destination]
+                        Sorts audio files by artist and by album.
+  -m, --modify TAGS VALUE
+                        Replaces all TAG values by VALUE
+  -p, --picture IMAGE   Adds IMAGE as cover art.
   -i, --interactive     Interactive mode.
-  -f TAG VALUE, --filter TAG VALUE
-                        Filters the input files using tag values.
-  -o, --order           Appends the tracknumber (if it exists) to the title tag value, useful for some devices.
-  -z, --zeropadding     Automatic left zero-padding for single-digit tracknumbers, so that they're ordered properly.
-  -D, --delete          Deletes every metadata tag from the audio files given as arguments.
+  -f, --filter TAGS PATTERN
+                        Filters audio files using PATTERN on TAG values. Specify multiple tags by separating them with ;
+  -o, --order           Appends tracknumber to title.
+  -D, --delete          Deletes cover art and lyrics from the audio files.
+  -F, --format          Apply one, or several formatting presets.
+  -R, --regex           Multi-tag pattern matching and replace
 ```
 
