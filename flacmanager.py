@@ -582,8 +582,17 @@ def applyPresets(audio_files, presets=None):
                             "genre",
                             "tracknumber",
                             "title"),
-                           re.compile(r'[\/\0\*\?\[\]\{\}~!$&;|<>"\'`\\]'),
+                           re.compile(r'[\/\0\*\?\[\]\{\}~!$;|<>"\\]'),
                            '')
+            modifyMetadata(audio_files,
+                           False,
+                           ("artist",
+                            "album",
+                            "genre",
+                            "tracknumber",
+                            "title"),
+                           re.compile(r'&'),
+                           'And')
         elif preset == 'Z':
             modifyMetadata(audio_files,
                            False,
